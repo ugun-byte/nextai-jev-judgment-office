@@ -513,10 +513,9 @@
       background: var(--bg-card);
       border: 1px solid var(--bg-card-border);
       border-radius: 14px;
-      padding: 12px 18px;
+      padding: 14px 18px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
       gap: 12px;
       box-shadow: 0 4px 18px rgba(0,0,0,0.25);
     }
@@ -524,22 +523,33 @@
     .sample-select-group {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex: 1;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .sample-select-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #cbd5e1;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     .custom-select {
       flex: 1;
-      max-width: 320px;
+      width: 100%;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--bg-card-border);
       border-radius: 8px;
       color: var(--text-main);
-      padding: 8px 12px;
+      padding: 9px 12px;
       font-size: 12px;
       font-weight: 500;
       outline: none;
       cursor: pointer;
+      min-width: 200px;
     }
 
     .custom-select option {
@@ -550,7 +560,11 @@
     .action-button-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .btn-auto-run.active {
@@ -1343,10 +1357,11 @@
         </div>
       </div>
 
-      <!-- Quick Control Toolbar -->
+      <!-- Quick Control Toolbar (2-Row Clean Layout) -->
       <div class="control-toolbar">
+        <!-- Row 1: Sample Mail Selector & Pneumatic Tube Dispatch (마킹부분 한 줄로 시원하게 정리) -->
         <div class="sample-select-group">
-          <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">⚡️ 실무 예제 12선:</span>
+          <span class="sample-select-label">⚡️ 실무 예제 12선:</span>
           <select id="exampleSelect" class="custom-select" onchange="loadSelectedExample()">
             <option value="" disabled selected>테스트할 비즈니스 메일을 선택하세요...</option>
             <option value="0">1. [표준 환불] 3일 전 결제 강의 수강 취소 및 전액 환불 요청</option>
@@ -1362,18 +1377,23 @@
             <option value="10">11. [광고/도서홍보] (광고)🎁 골든래빗 신작 도서 출간 예약판매 안내</option>
             <option value="11">12. [매출/결제완료] [결제승인] 홍길동님의 'AI 에이전트 마스터' 결제 완료 알림</option>
           </select>
-          <button class="btn btn-primary" onclick="sendSelectedExample()">공압 튜브 투입 🚀</button>
+          <button class="btn btn-primary" style="white-space: nowrap; padding: 10px 20px; font-weight: 700; flex-shrink: 0;" onclick="sendSelectedExample()">
+            공압 튜브 투입 🚀
+          </button>
         </div>
 
+        <!-- Row 2: Office Control Actions & Ingested Mails -->
         <div class="action-button-group">
-          <button id="autoRunBtn" class="btn btn-auto-run" onclick="toggleAutoRun()">
-            <span id="autoRunIcon">▶️</span> 자동 실행 (Auto-run)
-          </button>
-          <button class="btn" onclick="openNewMsgModal()">직접 작성</button>
-          <button id="gmailQuickFetchBtn" class="btn" style="background: rgba(239, 68, 68, 0.18); border-color: rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 6px;" onclick="fetchGmailUnreadNow()" title="지메일 수신함에서 새 문의 메일을 즉시 가져와 3D 오피스로 투하합니다">
-            📬 새 메일 가져오기
-          </button>
-          <button class="btn" style="background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.5); color: #c7d2fe; display: inline-flex; align-items: center; gap: 6px; font-weight: 700;" onclick="goToLogsTab()" title="우측 패널의 누적 판정 이력 및 중요도 필터 탭으로 즉시 전환합니다">
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <button id="autoRunBtn" class="btn btn-auto-run" onclick="toggleAutoRun()">
+              <span id="autoRunIcon">▶️</span> 자동 실행 (Auto-run)
+            </button>
+            <button class="btn" onclick="openNewMsgModal()">✍️ 직접 작성</button>
+            <button id="gmailQuickFetchBtn" class="btn" style="background: rgba(239, 68, 68, 0.18); border-color: rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 6px;" onclick="fetchGmailUnreadNow()" title="지메일 수신함에서 새 문의 메일을 즉시 가져와 3D 오피스로 투하합니다">
+              📬 새 메일 가져오기
+            </button>
+          </div>
+          <button class="btn" style="background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.5); color: #c7d2fe; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; white-space: nowrap;" onclick="goToLogsTab()" title="우측 패널의 누적 판정 이력 및 중요도 필터 탭으로 즉시 전환합니다">
             📋 판정 이력 보관함 (<span id="quickLogCount">0</span>)
           </button>
         </div>
