@@ -168,6 +168,10 @@
       50% { box-shadow: 0 0 18px rgba(245, 158, 11, 0.6); }
     }
 
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .status-dot {
       width: 8px;
       height: 8px;
@@ -660,22 +664,30 @@
       display: flex;
       background: rgba(15, 17, 23, 0.6);
       border-bottom: 1px solid var(--bg-card-border);
-      padding: 0 8px;
+      padding: 0 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tabs-header::-webkit-scrollbar {
+      display: none;
     }
 
     .tab-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 14px 16px;
-      font-size: 12px;
+      padding: 12px 13px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       border-bottom: 2px solid transparent;
       transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .tab-btn:hover {
@@ -685,6 +697,11 @@
     .tab-btn.active {
       color: #fff;
       border-bottom-color: var(--primary);
+    }
+
+    .tab-btn#tabBtnCommercial.active {
+      border-bottom-color: #a855f7;
+      color: #e9d5ff;
     }
 
     .tab-content {
@@ -1268,6 +1285,9 @@
       <button id="gmailBtn" class="btn" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; display: inline-flex; align-items: center; gap: 6px;" onclick="openGmailModal()">
         📧 지메일 연동 <span id="gmailBadge" style="background: rgba(239, 68, 68, 0.7); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 700;">OFF</span>
       </button>
+      <button id="commercialAiHeaderBtn" class="btn" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.45); color: #d8b4fe; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;" onclick="goToCommercialTab()" title="생소한 복합 문제 발생 시 상용 AI(GPT-4o/Claude/Gemini) 자동 위임 설정 탭으로 이동">
+        🌐 일반 AI <span id="commercialAiBadge" style="background: #9333ea; color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 700;">ON</span>
+      </button>
 
       <button class="btn" onclick="openOllamaGuide()">🔌 연결 설정</button>
       <button class="btn" onclick="openRationaleModal()">💡 설계 의도</button>
@@ -1404,9 +1424,10 @@
     <div class="inspector-panel">
       <!-- Tabs Header -->
       <div class="tabs-header">
-        <button class="tab-btn active" onclick="switchTab('inspector', this)">🔍 실시간 판단 인스펙터</button>
-        <button class="tab-btn" onclick="switchTab('tree', this)">🌳 의사결정 트리 편집기</button>
-        <button class="tab-btn" onclick="switchTab('logs', this)">📋 판단 로그 & 피드백</button>
+        <button class="tab-btn active" onclick="switchTab('inspector', this)">🔍 실시간 판단</button>
+        <button class="tab-btn" onclick="switchTab('tree', this)">🌳 트리 편집기</button>
+        <button class="tab-btn" onclick="switchTab('logs', this)">📋 판단 로그</button>
+        <button id="tabBtnCommercial" class="tab-btn" onclick="switchTab('commercial', this)" style="color: #c084fc;">🌐 일반 AI 연동</button>
       </div>
 
       <!-- Tab 1: Live Decision Inspector -->
@@ -1543,6 +1564,147 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Tab 4: Commercial Frontier AI (구독형 상용 AI) Integration -->
+      <div id="tab-commercial" class="tab-content" style="display: none;">
+        <!-- Two-Tier Intelligence Banner -->
+        <div style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.18), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">🌐</span>
+              <span style="font-weight: 800; font-size: 14px; color: #f3e8ff;">2단계 하이브리드 지능 (System 1 + System 2 Fallback)</span>
+            </div>
+            <span id="commAiStatusBadgePill" style="font-size: 11px; padding: 3px 8px; border-radius: 12px; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; font-weight: 700;">🟢 위임 대기 중</span>
+          </div>
+          <p style="font-size: 12px; color: #d8b4fe; line-height: 1.6; margin: 0 0 10px 0;">
+            <strong>기본 원칙:</strong> 평상시엔 0원 비용의 <strong>로컬 Jev 경량 AI</strong>가 0.05초 초고속으로 실무 메일을 자율 처리합니다.<br>
+            <strong>자동 위임 (Fallback):</strong> 신규/복합/모호한 문의 등 <strong>Jev AI가 확신을 갖지 못할 때(신뢰도 기준 미달)</strong>에만 구독형 상용 AI(GPT-4o, Claude 3.5, Gemini)가 즉시 개입하여 해결합니다.
+          </p>
+          <div style="display: flex; gap: 10px; background: rgba(0, 0, 0, 0.25); padding: 8px 12px; border-radius: 8px; font-size: 11px;">
+            <div style="flex: 1; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 8px;">
+              <div style="color: var(--text-dim); font-size: 10px;">1차 처리 (System 1)</div>
+              <div style="font-weight: 700; color: #a5b4fc;">로컬 Jev AI (0원 연산)</div>
+            </div>
+            <div style="flex: 1.2;">
+              <div style="color: var(--text-dim); font-size: 10px;">2차 위임 (System 2)</div>
+              <div style="font-weight: 700; color: #d8b4fe;" id="commAiActiveSummary">Google Gemini (Gemini 1.5 Flash)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Master Switch & Sensitivity -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--bg-card-border); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 13px;">생소한 문제 발생 시 상용 AI 자동 위임 (Fallback)</div>
+              <div style="font-size: 11px; color: var(--text-dim);">Jev AI 판단 불가 시 대표(CEO)로 바로 넘기지 않고 상용 AI가 1차 해결</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 46px; height: 24px; cursor: pointer; flex-shrink: 0;">
+              <input type="checkbox" id="commAiEnabledToggle" checked onchange="onCommercialAiToggleChange()" style="opacity: 0; width: 0; height: 0;">
+              <span id="commAiToggleTrack" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #9333ea; transition: .3s; border-radius: 24px;"></span>
+              <span id="commAiToggleThumb" style="position: absolute; content: ''; height: 18px; width: 18px; left: 24px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+            </label>
+          </div>
+
+          <!-- Threshold Slider -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">⚡️ 위임 발동 임계치 (Confidence Threshold):</span>
+              <span id="commAiThresholdLabel" style="font-size: 12px; font-weight: 800; color: #a855f7;">50% 미만</span>
+            </div>
+            <input type="range" id="commAiThresholdSlider" min="30" max="80" step="5" value="50" oninput="onCommercialAiThresholdChange(this.value)" style="width: 100%; accent-color: #a855f7;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); margin-top: 2px;">
+              <span>30% (극단적 모호 건만 위임)</span>
+              <span>권장 (50%)</span>
+              <span>80% (조금만 생소해도 위임)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Provider & API Key Settings Card -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--bg-card-border); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-weight: 700; color: #fff; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <span>🔑 상용 AI 서비스 선택 및 API 키 연동</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div>
+              <label style="display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px;">AI 공급사 (Provider):</label>
+              <select id="commAiProviderSelect" onchange="onCommercialAiProviderChange()" style="width: 100%; background: #0f1117; border: 1px solid var(--bg-card-border); color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 12px;">
+                <option value="gemini" selected>Google Gemini (권장 / 빠른 속도)</option>
+                <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+                <option value="claude">Anthropic Claude (Claude 3.5)</option>
+                <option value="openrouter">OpenRouter (DeepSeek / Llama)</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px;">모델명 (Model ID):</label>
+              <input type="text" id="commAiModelInput" value="gemini-1.5-flash" style="width: 100%; box-sizing: border-box; background: #0f1117; border: 1px solid var(--bg-card-border); color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 12px;">
+            </div>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-bottom: 4px;">
+              <span>API 인증 키 (API Key):</span>
+              <span style="font-size: 10px; color: #10b981;">🔒 내 브라우저 로컬(localStorage)에만 안전 보관됨</span>
+            </label>
+            <div style="display: flex; gap: 6px;">
+              <input type="password" id="commAiKeyInput" placeholder="예: AIzaSy... (Gemini) 또는 sk-proj-... (OpenAI)" style="flex: 1; background: #0f1117; border: 1px solid var(--bg-card-border); color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-family: monospace;">
+              <button class="btn" id="commAiKeyToggleBtn" onclick="toggleCommercialAiKeyVisibility()" style="padding: 0 10px; font-size: 11px;">👁️ 보기</button>
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">
+              * API 키가 없어도 <strong>실감형 시뮬레이션 엔진</strong>으로 즉시 테스트하실 수 있습니다. 키 입력 시 실제 클라우드 AI가 호출됩니다.
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+            <span id="commAiTestResultLabel" style="font-size: 11px; margin-right: auto; color: var(--text-dim);">대기 중</span>
+            <button class="btn" style="background: rgba(168, 85, 247, 0.2); border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff; font-weight: 700; font-size: 11px;" onclick="testCommercialAiConnection()">
+              ⚡️ API 연결 테스트
+            </button>
+            <button class="btn btn-primary" style="font-size: 11px; padding: 8px 16px;" onclick="saveCommercialAiSettings()">
+              💾 설정 저장
+            </button>
+          </div>
+        </div>
+
+        <!-- Novel Unfamiliar Issues One-Click Test Sandbox -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--bg-card-border); border-radius: 10px; padding: 14px;">
+          <div style="font-weight: 700; color: #fff; font-size: 13px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>🧪 생소한 복합 문제 원클릭 시뮬레이션 (Fallback 검증)</span>
+          </div>
+          <p style="font-size: 11px; color: var(--text-dim); margin: 0 0 10px 0; line-height: 1.5;">
+            아래 샘플을 클릭하면 메일이 공압 튜브로 투하되며, <strong>1차 Jev AI 판단 불가(확신도 저하) ➔ 2차 일반 상용 AI 자동 위임 ➔ 심층 분석 및 배정</strong> 전 과정을 즉시 확인하실 수 있습니다.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button class="btn" style="text-align: left; padding: 10px 12px; background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.3); display: flex; justify-content: space-between; align-items: center;" onclick="runNovelIssueSimulation(0)">
+              <div>
+                <div style="font-weight: 700; color: #c7d2fe; font-size: 12px;">⚖️ [사례 1: 환불 불만 + 동업 제휴 복합 제안]</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">"강의 불만으로 환불해주시든가, 아니면 저랑 동업해서 새 강좌 찍으시죠"</div>
+              </div>
+              <span style="font-size: 11px; color: #a5b4fc; white-space: nowrap; font-weight: 700; margin-left: 8px;">테스트 투하 🚀</span>
+            </button>
+
+            <button class="btn" style="text-align: left; padding: 10px 12px; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.3); display: flex; justify-content: space-between; align-items: center;" onclick="runNovelIssueSimulation(1)">
+              <div>
+                <div style="font-weight: 700; color: #fca5a5; font-size: 12px;">⚠️ [사례 2: 오픈소스 라이선스(GPL) 위반 제보 및 분쟁]</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">"5강 예제 코드에 GPL 라이선스 모듈 침해 경고 발생, 법적 소명 요청"</div>
+              </div>
+              <span style="font-size: 11px; color: #fca5a5; white-space: nowrap; font-weight: 700; margin-left: 8px;">테스트 투하 🚀</span>
+            </button>
+
+            <button class="btn" style="text-align: left; padding: 10px 12px; background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); display: flex; justify-content: space-between; align-items: center;" onclick="runNovelIssueSimulation(2)">
+              <div>
+                <div style="font-weight: 700; color: #6ee7b7; font-size: 12px;">🏛️ [사례 3: 공공기관 5,000명 엔터프라이즈 맞춤형 SLA 제안 요청]</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">"한국지능정보원(NIA) 전 직원 폐쇄망 설치형 플랫폼 견적 및 계약 조율"</div>
+              </div>
+              <span style="font-size: 11px; color: #6ee7b7; white-space: nowrap; font-weight: 700; margin-left: 8px;">테스트 투하 🚀</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -1581,6 +1743,15 @@
         <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 8px; padding: 12px;">
           <div style="font-weight: 700; color: #818cf8; margin-bottom: 6px;">🧠 AI 의사결정 추론 경로</div>
           <div id="mdmTrajectory" style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;"></div>
+        </div>
+
+        <!-- Commercial AI Reasoning Box (Shown if solved by commercial AI) -->
+        <div id="mdmCommercialAiBox" style="display: none; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 8px; padding: 12px;">
+          <div style="font-weight: 700; color: #d8b4fe; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>🌐 상용 AI (System 2 Fallback) 심층 판정 근거</span>
+            <span id="mdmCommercialAiProviderBadge" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(168, 85, 247, 0.3); color: #f3e8ff;"></span>
+          </div>
+          <div id="mdmCommercialAiReasoning" style="font-size: 12px; line-height: 1.5; color: #f3e8ff;"></div>
         </div>
 
         <!-- Target Dept & Auto-draft Reply -->
@@ -3522,7 +3693,7 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
           if (body.includes("특강") || body.includes("출강") || body.includes("협찬") || body.includes("ppl") || body.includes("제안") || body.includes("스폰서")) pPart += 0.85;
           if (body.includes("질문") || body.includes("수식") || body.includes("attention") || body.includes("진로") || body.includes("조언")) pMent += 0.80;
 
-          if (body.includes("동업") || body.includes("키보드") || body.includes("모니터")) {
+          if (body.includes("동업") || body.includes("키보드") || body.includes("모니터") || body.includes("gpl") || body.includes("라이선스") || body.includes("폐쇄망") || body.includes("sla") || body.includes("변리사") || body.includes("침해") || body.includes("소송")) {
             pBilling = 0.30; pPart = 0.32; pMent = 0.28; pTech = 0.10;
           }
 
@@ -3661,10 +3832,117 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
         });
         updateTrajectoryUI(evaluatedChain);
 
-        // Low confidence (< threshold -> CEO)
+        // Low confidence (< threshold -> Try Commercial AI Fallback first, then CEO)
         const threshold = questionDef.threshold || 0.50;
         if (confidence < threshold) {
           if (thisSessionId !== currentMessageSessionId) return;
+
+          // ---- System 2 Fallback: Commercial AI Attempt ----
+          const commCfg = getCommercialAiConfig();
+          if (commCfg.enabled) {
+            // Show fallback card in inspector
+            const evalContainer = document.getElementById("questionsEvalContainer");
+            const fbCard = document.createElement("div");
+            fbCard.className = "question-eval-card active-step";
+            fbCard.style.border = "2px solid #a855f7";
+            fbCard.style.background = "linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(30, 41, 59, 0.95))";
+            fbCard.style.boxShadow = "0 0 20px rgba(168, 85, 247, 0.25)";
+            fbCard.innerHTML = `
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span style="font-size:18px;">🌐</span>
+                <strong style="color:#d8b4fe; font-size:13px;">[System 2 Fallback] 상용 AI 위임 추론 진행 중...</strong>
+              </div>
+              <p style="font-size:11px; color:#e2e8f0; margin:0; line-height:1.5;">
+                로컬 Jev AI 확신도가 ${Math.round(confidence * 100)}%로 기준치(${Math.round(threshold * 100)}%)에 미달하여,
+                ${commCfg.provider.toUpperCase()} 상용 AI에 자동 위임하여 심층 분석을 수행합니다...
+              </p>
+              <div style="margin-top:8px; display:flex; align-items:center; gap:6px;">
+                <div style="width:14px; height:14px; border: 2px solid #a855f7; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                <span style="font-size:11px; color:#c084fc;" id="commAiFallbackStatusText">추론 요청 전송 중...</span>
+              </div>
+            `;
+            evalContainer.appendChild(fbCard);
+            playSound("tick");
+
+            const fallbackResult = await callCommercialAiFallback(msg, questionDef, currentQuestionId);
+
+            if (fallbackResult && fallbackResult.ok && fallbackResult.choice) {
+              // Commercial AI solved it!
+              const fbStatusText = document.getElementById("commAiFallbackStatusText");
+              if (fbStatusText) fbStatusText.innerText = `✅ ${fallbackResult.provider || commCfg.provider.toUpperCase()} 위임 해결 완료 (${fallbackResult.elapsedMs}ms)`;
+
+              fbCard.style.border = "2px solid #22c55e";
+              fbCard.style.background = "linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(30, 41, 59, 0.95))";
+              fbCard.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:18px;">🌐</span>
+                    <strong style="color:#4ade80; font-size:13px;">[System 2 위임 해결] ${fallbackResult.provider || commCfg.provider.toUpperCase()}</strong>
+                  </div>
+                  <span style="font-size:10px; padding:2px 8px; border-radius:8px; background:rgba(168,85,247,0.25); color:#d8b4fe; font-weight:700;">
+                    ${fallbackResult.simulated ? '시뮬레이션' : '실제 API'} (${fallbackResult.elapsedMs}ms)
+                  </span>
+                </div>
+                <div style="font-size:12px; color:#e2e8f0; line-height:1.5; margin-bottom:6px;">
+                  <strong style="color:#c084fc;">판정 근거:</strong> ${escapeHtml(fallbackResult.reasoning || "")}
+                </div>
+                <div style="font-size:11px; color:var(--text-dim);">
+                  선택: <span style="color:#4ade80; font-weight:700;">${fallbackResult.choice}</span> · 
+                  확신도: <span style="color:#4ade80; font-weight:700;">${Math.round((fallbackResult.confidence || 0.96) * 100)}%</span>
+                </div>
+              `;
+
+              // Build a synthetic answer from commercial AI result for routing
+              const commAnswer = { choice: fallbackResult.choice, confidence: fallbackResult.confidence || 0.96 };
+              evaluatedChain.push({
+                questionId: currentQuestionId + "_commercial_ai",
+                questionNameKo: "🌐 상용 AI 위임 판정",
+                answer: commAnswer,
+                confidence: fallbackResult.confidence || 0.96,
+                timeMs: fallbackResult.elapsedMs || 420,
+                commercialAi: {
+                  provider: fallbackResult.provider || commCfg.provider,
+                  model: fallbackResult.model || commCfg.model,
+                  reasoning: fallbackResult.reasoning || "",
+                  draftReply: fallbackResult.draft_reply || "",
+                  simulated: fallbackResult.simulated || false
+                }
+              });
+              updateTrajectoryUI(evaluatedChain);
+              totalTimeMs += (fallbackResult.elapsedMs || 420);
+
+              // Route based on commercial AI choice
+              let commRouteResult = null;
+              if (questionDef.type === "choice" && questionDef.routes) {
+                commRouteResult = questionDef.routes[fallbackResult.choice];
+              }
+
+              if (commRouteResult && commRouteResult.type === "question") {
+                currentQuestionId = commRouteResult.target;
+                await sleep(500 / simSpeedMultiplier);
+                // continue to next iteration of while loop
+              } else if (commRouteResult && commRouteResult.type === "action") {
+                finalAction = currentTree.actions[commRouteResult.target];
+                // Override draft with commercial AI's draft
+                if (finalAction && fallbackResult.draft_reply) {
+                  finalAction = { ...finalAction, draftTemplate: fallbackResult.draft_reply };
+                }
+                currentQuestionId = null;
+              } else {
+                // Fallback: find matching action by choice key
+                const matchedAction = Object.values(currentTree.actions).find(a => 
+                  a.id && a.id.toLowerCase().includes(fallbackResult.choice.toLowerCase())
+                ) || currentTree.actions[fallbackResult.choice] || currentTree.actions["billing"] || Object.values(currentTree.actions)[0];
+                finalAction = fallbackResult.draft_reply ? { ...matchedAction, draftTemplate: fallbackResult.draft_reply } : matchedAction;
+                currentQuestionId = null;
+              }
+
+              // Don't go to CEO — commercial AI resolved it
+              continue;
+            }
+          }
+
+          // Commercial AI disabled or failed -> fall through to CEO
           setTargetDeskHighlight(null, true);
           await routeToCeoForManualDecision(msg, evaluatedChain, questionDef, answer, parcel);
           return;
@@ -4256,6 +4534,18 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
               <span class="path-node-tag" style="border-color: #6366f1;">${escapeHtml(qTitle)} (${escapeHtml(String(ans))})</span>
             `;
           });
+        }
+        // Commercial AI Reasoning (if present in trajectory)
+        const commAiBox = document.getElementById("mdmCommercialAiBox");
+        const commAiReasoning = document.getElementById("mdmCommercialAiReasoning");
+        const commAiProvBadge = document.getElementById("mdmCommercialAiProviderBadge");
+        const commStep = (log.trajectory || []).find(t => t && t.commercialAi);
+        if (commStep && commAiBox) {
+          commAiBox.style.display = "block";
+          if (commAiProvBadge) commAiProvBadge.innerText = `${commStep.commercialAi.provider || ""} / ${commStep.commercialAi.model || ""}`;
+          if (commAiReasoning) commAiReasoning.innerText = commStep.commercialAi.reasoning || "심층 판정 근거 없음";
+        } else if (commAiBox) {
+          commAiBox.style.display = "none";
         }
 
         // Target Dept & Auto-draft
@@ -4966,6 +5256,242 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
     }
 
     /* ==========================================================================
+       13-C. COMMERCIAL FRONTIER AI (System 2 Fallback) ENGINE
+       ========================================================================== */
+    const NOVEL_ISSUE_SAMPLES = [
+      {
+        sender: "confused_owner@naver.com (학원사업자 박재영)",
+        subject: "강의 불만 환불 + 공동 제작 동업 제안",
+        body: "강의 샀는데 내용이 너무 빨라서 반은 알아듣고 반은 모르겠네요. 환불 절차를 진행해주시든가, 아니면 저는 학원 강사 20년 경력인데 저와 동업 파트너십 맺고 초보자용 기초과정 강좌를 새로 런칭해보시는 건 어떨까요? 강의료 수익 배분 조건도 상의하고 싶습니다."
+      },
+      {
+        sender: "legal@opensourcecorp.kr (오픈소스재단 법무팀)",
+        subject: "[GPL 라이선스 침해 경고] 5강 실습 코드 내 GPL v3 모듈 무단 포함 통보",
+        body: "안녕하세요 NextAI 대표님, 귀사의 'AI 에이전트 마스터' 5강 실습 예제 코드(lesson05_agent.py) 내에 GNU GPL v3 라이선스로 배포된 저희 오픈소스 라이브러리 'libagent-core'가 라이선스 고지 없이 무단 포함되어 상업적으로 배포되고 있음을 확인하였습니다. 14일 이내 법적 소명 또는 코드 제거를 요청드립니다."
+      },
+      {
+        sender: "procurement@nia.or.kr (한국지능정보원 조달팀 김수진)",
+        subject: "[공공조달 RFP] NIA 전 직원 5,000명 폐쇄망 설치형 AI 교육 플랫폼 견적 및 SLA 요청",
+        body: "안녕하세요 NextAI 대표이사님. 한국지능정보원(NIA)에서 공공기관 디지털 역량 강화 사업 일환으로, 폐쇄망(Air-gap) 환경 내 전 직원 5,000명 대상 맞춤형 AI 교육 플랫폼 구축을 검토 중입니다. 온프레미스 설치형 라이선스, 99.5% SLA 보장, 관리자 대시보드, 수료증 자동 발급 기능 포함 견적서와 기술 제안서를 30일 이내 제출하여 주시기 바랍니다."
+      }
+    ];
+
+    function getCommercialAiConfig() {
+      const enabled = localStorage.getItem("comm_ai_enabled") !== "false";
+      const provider = localStorage.getItem("comm_ai_provider") || "gemini";
+      const model = localStorage.getItem("comm_ai_model") || "gemini-1.5-flash";
+      const apiKey = localStorage.getItem("comm_ai_key") || "";
+      const threshold = parseInt(localStorage.getItem("comm_ai_threshold") || "50", 10) / 100;
+      return { enabled, provider, model, apiKey, threshold };
+    }
+
+    function saveCommercialAiSettings() {
+      const provider = document.getElementById("commAiProviderSelect").value;
+      const model = document.getElementById("commAiModelInput").value.trim();
+      const apiKey = document.getElementById("commAiKeyInput").value.trim();
+      const enabled = document.getElementById("commAiEnabledToggle").checked;
+      const threshold = document.getElementById("commAiThresholdSlider").value;
+
+      localStorage.setItem("comm_ai_enabled", enabled ? "true" : "false");
+      localStorage.setItem("comm_ai_provider", provider);
+      localStorage.setItem("comm_ai_model", model || "gemini-1.5-flash");
+      localStorage.setItem("comm_ai_key", apiKey);
+      localStorage.setItem("comm_ai_threshold", threshold);
+
+      updateCommercialAiHeaderBadge();
+      updateCommercialAiSummaryLabel();
+      showFloatingToast("상용 AI 설정 저장 완료!", `${provider.toUpperCase()} / ${model || "기본 모델"} 구성이 안전하게 저장되었습니다.`, "💾", 3000);
+    }
+
+    function loadCommercialAiConfig() {
+      const cfg = getCommercialAiConfig();
+      const toggle = document.getElementById("commAiEnabledToggle");
+      if (toggle) toggle.checked = cfg.enabled;
+      onCommercialAiToggleChange();
+
+      const provSelect = document.getElementById("commAiProviderSelect");
+      if (provSelect) provSelect.value = cfg.provider;
+
+      const modelInput = document.getElementById("commAiModelInput");
+      if (modelInput) modelInput.value = cfg.model;
+
+      const keyInput = document.getElementById("commAiKeyInput");
+      if (keyInput) keyInput.value = cfg.apiKey;
+
+      const slider = document.getElementById("commAiThresholdSlider");
+      if (slider) {
+        slider.value = Math.round(cfg.threshold * 100);
+        onCommercialAiThresholdChange(slider.value);
+      }
+
+      updateCommercialAiHeaderBadge();
+      updateCommercialAiSummaryLabel();
+    }
+
+    function onCommercialAiToggleChange() {
+      const toggle = document.getElementById("commAiEnabledToggle");
+      const track = document.getElementById("commAiToggleTrack");
+      const thumb = document.getElementById("commAiToggleThumb");
+      if (!toggle) return;
+      if (toggle.checked) {
+        if (track) track.style.backgroundColor = "#9333ea";
+        if (thumb) thumb.style.left = "24px";
+      } else {
+        if (track) track.style.backgroundColor = "#475569";
+        if (thumb) thumb.style.left = "3px";
+      }
+      updateCommercialAiHeaderBadge();
+    }
+
+    function onCommercialAiThresholdChange(val) {
+      const label = document.getElementById("commAiThresholdLabel");
+      if (label) label.innerText = `${val}% 미만`;
+    }
+
+    function onCommercialAiProviderChange() {
+      const provider = document.getElementById("commAiProviderSelect").value;
+      const modelInput = document.getElementById("commAiModelInput");
+      const defaults = {
+        gemini: "gemini-1.5-flash",
+        openai: "gpt-4o-mini",
+        claude: "claude-3-5-haiku-20241022",
+        openrouter: "meta-llama/llama-3.2-3b-instruct:free"
+      };
+      if (modelInput) modelInput.value = defaults[provider] || "";
+      updateCommercialAiSummaryLabel();
+    }
+
+    function updateCommercialAiSummaryLabel() {
+      const prov = document.getElementById("commAiProviderSelect");
+      const mod = document.getElementById("commAiModelInput");
+      const label = document.getElementById("commAiActiveSummary");
+      if (!label || !prov) return;
+      const provNames = { gemini: "Google Gemini", openai: "OpenAI", claude: "Anthropic Claude", openrouter: "OpenRouter" };
+      label.innerText = `${provNames[prov.value] || prov.value} (${mod ? mod.value : ""})`;
+    }
+
+    function updateCommercialAiHeaderBadge() {
+      const badge = document.getElementById("commercialAiBadge");
+      const toggle = document.getElementById("commAiEnabledToggle");
+      if (!badge) return;
+      if (toggle && toggle.checked) {
+        badge.innerText = "ON";
+        badge.style.background = "#9333ea";
+      } else {
+        badge.innerText = "OFF";
+        badge.style.background = "rgba(100, 116, 139, 0.6)";
+      }
+    }
+
+    function toggleCommercialAiKeyVisibility() {
+      const input = document.getElementById("commAiKeyInput");
+      const btn = document.getElementById("commAiKeyToggleBtn");
+      if (!input) return;
+      if (input.type === "password") {
+        input.type = "text";
+        if (btn) btn.innerText = "🔒 가리기";
+      } else {
+        input.type = "password";
+        if (btn) btn.innerText = "👁️ 보기";
+      }
+    }
+
+    function goToCommercialTab() {
+      switchTab("commercial");
+    }
+
+    async function testCommercialAiConnection() {
+      const label = document.getElementById("commAiTestResultLabel");
+      if (label) { label.style.color = "#fbbf24"; label.innerText = "⏳ 연결 테스트 진행 중..."; }
+
+      const provider = document.getElementById("commAiProviderSelect").value;
+      const apiKey = document.getElementById("commAiKeyInput").value.trim();
+      const model = document.getElementById("commAiModelInput").value.trim();
+
+      if (!apiKey) {
+        if (label) { label.style.color = "#c084fc"; label.innerText = "💡 API 키 없이 시뮬레이션 모드로 작동합니다 (즉시 테스트 가능)"; }
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/ai/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider, api_key: apiKey, model })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          if (label) { label.style.color = "#4ade80"; label.innerText = `✅ ${data.provider} 연결 성공! (${data.elapsedMs}ms / ${data.model})`; }
+        } else {
+          if (label) { label.style.color = "#f87171"; label.innerText = `❌ 연결 실패: ${data.error || "알 수 없는 오류"}`; }
+        }
+      } catch (err) {
+        if (label) { label.style.color = "#f87171"; label.innerText = `❌ 네트워크 오류: ${err.message}`; }
+      }
+    }
+
+    async function callCommercialAiFallback(msg, questionDef, questionId) {
+      const cfg = getCommercialAiConfig();
+      const statusPill = document.getElementById("commAiStatusBadgePill");
+
+      if (statusPill) {
+        statusPill.style.background = "rgba(168, 85, 247, 0.3)";
+        statusPill.style.borderColor = "rgba(168, 85, 247, 0.6)";
+        statusPill.style.color = "#e9d5ff";
+        statusPill.innerText = "🧠 상용 AI 추론 중...";
+      }
+
+      try {
+        const res = await fetch("/api/ai/solve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: cfg.provider,
+            api_key: cfg.apiKey,
+            model: cfg.model,
+            subject: msg.subject,
+            body: msg.body,
+            question_id: questionId,
+            question_def: {
+              nameKo: questionDef.nameKo || questionId,
+              instructions: questionDef.instructions || "",
+              criteria: questionDef.criteria || {}
+            }
+          })
+        });
+        const data = await res.json();
+
+        if (statusPill) {
+          statusPill.style.background = "rgba(34, 197, 94, 0.2)";
+          statusPill.style.borderColor = "rgba(34, 197, 94, 0.4)";
+          statusPill.style.color = "#4ade80";
+          statusPill.innerText = "🟢 위임 해결 완료";
+          setTimeout(() => { statusPill.innerText = "🟢 위임 대기 중"; }, 8000);
+        }
+
+        return data;
+      } catch (err) {
+        console.warn("상용 AI Fallback 호출 실패:", err);
+        if (statusPill) {
+          statusPill.style.color = "#f87171";
+          statusPill.innerText = "❌ 위임 실패";
+        }
+        return null;
+      }
+    }
+
+    function runNovelIssueSimulation(idx) {
+      const sample = NOVEL_ISSUE_SAMPLES[idx];
+      if (!sample) return;
+      switchTab("inspector");
+      processIncomingMessage({
+        sender: sample.sender,
+        subject: sample.subject,
+        body: sample.body
+      });
+    }
+
+    /* ==========================================================================
        13-B. GMAIL INTEGRATION & AUTO-SYNC ENGINE
        ========================================================================== */
     let isFetchingGmail = false;
@@ -5555,6 +6081,9 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
 
       // 7. Load & Initialize Gmail Integration
       loadGmailConfig();
+
+      // 8. Load & Initialize Commercial AI (System 2 Fallback) Settings
+      loadCommercialAiConfig();
     });
   </script>
 

@@ -11,6 +11,7 @@ import json
 import http.server
 import socketserver
 from gmail_service import GmailService
+import ai_service
 
 PORT = 8888
 if len(sys.argv) > 1:
@@ -211,6 +212,30 @@ class NextAIRequestHandler(http.server.SimpleHTTPRequestHandler):
             global inbound_queue
             inbound_queue.append(item)
             self._send_json({"ok": True, "message": "새 메일이 수신 큐에 등록되었습니다.", "queue_size": len(inbound_queue)})
+            return
+
+        # 5. Test commercial frontier AI connection
+        if self.path == "/api/ai/test":
+            data = self._read_body_json()
+            provider = data.get("provider", "gemini")
+            api_key = data.get("api_key", "").strip()
+            model = data.get("model", "")
+            res = ai_service.test_ai_connection(provider, api_key, model)
+            self._send_json(res)
+            return
+
+        # 6. Solve unfamiliar/ambiguous customer inquiry via commercial AI fallback
+        if self.path == "/api/ai/solve":
+            data = self._read_body_json()
+            provider = data.get("provider", "gemini")
+            api_key = data.get("api_key", "").strip()
+            model = data.get("model", "")
+            subject = data.get("subject") or data.get("mail_subject") or ""
+            body = data.get("body") or data.get("mail_body") or ""
+            question_id = data.get("question_id", "")
+            question_def = data.get("question_def", {})
+            res = ai_service.solve_unfamiliar_issue(provider, api_key, model, subject, body, question_id, question_def)
+            self._send_json(res)
             return
 
         self._send_json({"error": "Not Found"}, status=404)
