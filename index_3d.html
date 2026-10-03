@@ -1489,6 +1489,16 @@
           </div>
         </div>
 
+        <!-- Priority Filter Chips -->
+        <div style="display: flex; gap: 6px; margin: 10px 0 14px; flex-wrap: wrap; align-items: center;">
+          <span style="font-size: 11px; color: var(--text-dim); margin-right: 4px;">중요도 빠른 필터:</span>
+          <button id="logFilterBtn-all" class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(99, 102, 241, 0.25); border-color: #818cf8; color: #fff;" onclick="setLogPriorityFilter('all')">전체 보기</button>
+          <button id="logFilterBtn-critical" class="btn" style="padding: 4px 10px; font-size: 11px; border-color: rgba(239, 68, 68, 0.4); color: #f87171;" onclick="setLogPriorityFilter('critical')">🔴 긴급(CEO 결재)</button>
+          <button id="logFilterBtn-high" class="btn" style="padding: 4px 10px; font-size: 11px; border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;" onclick="setLogPriorityFilter('high')">🟡 중요(결제/매출)</button>
+          <button id="logFilterBtn-normal" class="btn" style="padding: 4px 10px; font-size: 11px; border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7;" onclick="setLogPriorityFilter('normal')">🟢 일반 실무</button>
+          <button id="logFilterBtn-archive" class="btn" style="padding: 4px 10px; font-size: 11px; border-color: rgba(100, 116, 139, 0.4); color: #94a3b8;" onclick="setLogPriorityFilter('archive')">⚪️ 단순보관</button>
+        </div>
+
         <table class="log-table">
           <thead>
             <tr>
@@ -1497,12 +1507,13 @@
               <th>발신자 / 제목</th>
               <th>경로 / 신뢰도</th>
               <th>최종 액션</th>
+              <th>상세 / 답변</th>
               <th>평가</th>
             </tr>
           </thead>
           <tbody id="logTableBody">
             <tr>
-              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">
+              <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">
                 아직 처리된 의사결정 로그가 없습니다.
               </td>
             </tr>
@@ -1511,6 +1522,63 @@
       </div>
     </div>
   </main>
+
+  <!-- MODAL: Mail Detail & Draft Answer Modal -->
+  <div id="mailDetailModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 680px; max-height: 88vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="mdmPriorityBadge"></span>
+          <h3 id="mdmSubject" style="font-size: 15px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 440px;">메일 상세 확인</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('mailDetailModal')">✕</button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; display: flex; flex-direction: column; gap: 14px; font-size: 12px;">
+        <!-- Sender & Time Info -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.03); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+          <div>
+            <div style="font-size: 10px; color: var(--text-dim);">발신자:</div>
+            <div id="mdmSender" style="font-weight: 700; color: #fff;"></div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: var(--text-dim);">수신 시각:</div>
+            <div id="mdmTime" style="color: var(--text-muted); font-size: 11px;"></div>
+          </div>
+        </div>
+
+        <!-- Mail Body Content -->
+        <div>
+          <div style="font-weight: 700; color: #a5b4fc; margin-bottom: 6px; display: flex; justify-content: space-between;">
+            <span>📨 이메일 원문 본문</span>
+          </div>
+          <div id="mdmBody" style="background: rgba(10, 14, 23, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6; color: #e2e8f0; max-height: 160px; overflow-y: auto; white-space: pre-wrap;"></div>
+        </div>
+
+        <!-- AI Decision Trajectory -->
+        <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 8px; padding: 12px;">
+          <div style="font-weight: 700; color: #818cf8; margin-bottom: 6px;">🧠 AI 의사결정 추론 경로</div>
+          <div id="mdmTrajectory" style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;"></div>
+        </div>
+
+        <!-- Target Dept & Auto-draft Reply -->
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="mdmDeptAvatar" style="font-size: 18px;">🤖</span>
+              <strong id="mdmDeptName" style="color: #6ee7b7; font-size: 13px;"></strong>
+            </div>
+            <button class="btn btn-primary" style="padding: 3px 10px; font-size: 11px;" onclick="copyDraftReply()">📋 초안 복사</button>
+          </div>
+          <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 6px;">AI 직원 자동 생성 회신문:</div>
+          <div id="mdmDraftReply" style="background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 10px; font-size: 12px; line-height: 1.5; color: #f1f5f9; font-style: italic;"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <div id="mdmFeedbackArea" style="display: flex; gap: 6px;"></div>
+        <button class="btn btn-primary" onclick="closeModal('mailDetailModal')">닫기</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: Department Desk Inspector -->
   <div id="deskInfoModal" class="modal-backdrop">
@@ -3769,6 +3837,8 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
         finalActionName: finalAction.deptName,
         priorityType: priorityType,
         priorityText: priorityText,
+        draftReply: finalAction.draftTemplate || "",
+        avatar: finalAction.avatar || "🤖",
         totalTimeMs: totalTimeMs,
         isCorrect: true
       };
@@ -3967,18 +4037,47 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
     /* ==========================================================================
        11. DECISION LOG & FEEDBACK TABLE
        ========================================================================== */
+    let activeLogPriorityFilter = 'all';
+
+    function setLogPriorityFilter(filter) {
+      activeLogPriorityFilter = filter;
+      const filterBtns = ['all', 'critical', 'high', 'normal', 'archive'];
+      filterBtns.forEach(f => {
+        const btn = document.getElementById(`logFilterBtn-${f}`);
+        if (btn) {
+          if (f === filter) {
+            btn.style.background = 'rgba(99, 102, 241, 0.35)';
+            btn.style.borderColor = '#818cf8';
+            btn.style.fontWeight = '700';
+          } else {
+            btn.style.background = 'transparent';
+            btn.style.fontWeight = 'normal';
+          }
+        }
+      });
+      renderLogsTable();
+    }
+
     function renderLogsTable() {
       const tbody = document.getElementById("logTableBody");
-      document.getElementById("logCountLabel").innerText = `(총 ${stats.logs.length}건)`;
+      const filteredLogs = activeLogPriorityFilter === 'all'
+        ? stats.logs.map((log, originalIdx) => ({ log, originalIdx }))
+        : stats.logs
+            .map((log, originalIdx) => ({ log, originalIdx }))
+            .filter(item => item.log.priorityType === activeLogPriorityFilter);
 
-      if (stats.logs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">아직 처리된 의사결정 로그가 없습니다.</td></tr>`;
+      document.getElementById("logCountLabel").innerText = `(표시: ${filteredLogs.length}건 / 총 ${stats.logs.length}건)`;
+
+      if (filteredLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">해당 조건의 의사결정 로그가 없습니다.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = "";
-      stats.logs.forEach((log, index) => {
+      filteredLogs.forEach(({ log, originalIdx }) => {
         const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.title = "클릭하여 메일 본문 원문 및 AI 답변 초안 상세 보기";
 
         const trajSnippet = log.trajectory.map(t => {
           let ans = t.answer.choice || (t.answer.noul !== undefined ? (t.answer.noul >= 0.7 ? '환불' : '결제') : `L${Math.round(t.answer.score || 0)}`);
@@ -4014,14 +4113,82 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
             ${log.correctedTo ? `<div style="font-size: 10px; color: #38bdf8; font-weight: 700; margin-top: 2px;">➜ 대표 수정: ${escapeHtml(log.correctedTo)}</div>` : ''}
           </td>
           <td>
-            <div style="display: flex; gap: 4px;">
-              <button class="feedback-btn ${log.isCorrect ? 'active-correct' : ''}" onclick="markLogFeedback(${index}, true)">👍 맞음</button>
-              <button class="feedback-btn ${!log.isCorrect ? 'active-wrong' : ''}" onclick="markLogFeedback(${index}, false)">👎 틀림</button>
+            <button class="btn" style="padding: 3px 8px; font-size: 10px; background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.4); color: #c7d2fe;" onclick="event.stopPropagation(); openLogDetailModal(${originalIdx})">
+              🔍 상세/초안
+            </button>
+          </td>
+          <td>
+            <div style="display: flex; gap: 4px;" onclick="event.stopPropagation()">
+              <button class="feedback-btn ${log.isCorrect ? 'active-correct' : ''}" onclick="markLogFeedback(${originalIdx}, true)">👍</button>
+              <button class="feedback-btn ${!log.isCorrect ? 'active-wrong' : ''}" onclick="markLogFeedback(${originalIdx}, false)">👎</button>
             </div>
           </td>
         `;
+        tr.onclick = () => openLogDetailModal(originalIdx);
         tbody.appendChild(tr);
       });
+    }
+
+    let currentDetailLogIndex = null;
+
+    function openLogDetailModal(index) {
+      currentDetailLogIndex = index;
+      const log = stats.logs[index];
+      if (!log) return;
+
+      let pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: 700;">🟢 일반 문의</span>`;
+      if (log.priorityType === "archive") {
+        pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(100, 116, 139, 0.25); color: #94a3b8; font-weight: 700;">⚪️ 단순보관</span>`;
+      } else if (log.priorityType === "high") {
+        pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; font-weight: 700;">🟡 중요(결제/매출)</span>`;
+      } else if (log.priorityType === "critical") {
+        pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(239, 68, 68, 0.25); color: #f87171; font-weight: 700;">🔴 긴급(CEO 결재)</span>`;
+      }
+
+      document.getElementById("mdmPriorityBadge").innerHTML = pBadgeHtml;
+      document.getElementById("mdmSubject").innerText = log.subject;
+      document.getElementById("mdmSender").innerText = log.sender;
+      document.getElementById("mdmTime").innerText = log.timestamp;
+      document.getElementById("mdmBody").innerText = log.body || "(본문 내용 없음)";
+
+      // Trajectory steps
+      const trajContainer = document.getElementById("mdmTrajectory");
+      trajContainer.innerHTML = `<span class="path-node-tag">🚀 투하 접수</span>`;
+      log.trajectory.forEach(t => {
+        let ans = t.answer.choice || (t.answer.noul !== undefined ? (t.answer.noul >= 0.7 ? '예(환불)' : '아니오') : `Level ${Math.round(t.answer.score || 0)}`);
+        trajContainer.innerHTML += `
+          <span class="path-arrow">➜</span>
+          <span class="path-node-tag" style="border-color: #6366f1;">${t.questionNameKo} (${ans})</span>
+        `;
+      });
+
+      // Target Dept & Auto-draft
+      const actionDef = currentTree.actions[log.finalActionId] || {};
+      document.getElementById("mdmDeptAvatar").innerText = log.avatar || actionDef.avatar || "🤖";
+      document.getElementById("mdmDeptName").innerText = log.finalActionName;
+      document.getElementById("mdmDraftReply").innerText = log.draftReply || actionDef.draftTemplate || "담당 부서에서 확인 후 신속히 처리해 드립니다.";
+
+      // Feedback area
+      const fbArea = document.getElementById("mdmFeedbackArea");
+      fbArea.innerHTML = `
+        <span style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; margin-right: 6px;">판단 정확도:</span>
+        <button class="feedback-btn ${log.isCorrect ? 'active-correct' : ''}" style="padding: 4px 10px; font-size: 11px;" onclick="markLogFeedback(${index}, true); openLogDetailModal(${index});">👍 정확함</button>
+        <button class="feedback-btn ${!log.isCorrect ? 'active-wrong' : ''}" style="padding: 4px 10px; font-size: 11px;" onclick="closeModal('mailDetailModal'); openFeedbackCorrectionModal(${index});">👎 다른 부서로 재배정</button>
+      `;
+
+      openModal("mailDetailModal");
+    }
+
+    function copyDraftReply() {
+      const text = document.getElementById("mdmDraftReply").innerText;
+      if (text) {
+        navigator.clipboard.writeText(text).then(() => {
+          showFloatingToast("답변 초안 복사 완료!", "클립보드에 복사되었습니다. 메일 회신에 바로 사용하실 수 있습니다.", "📋", 3000);
+        }).catch(() => {
+          copyText(text);
+          showFloatingToast("답변 초안 복사 완료!", "클립보드에 복사되었습니다.", "📋", 3000);
+        });
+      }
     }
 
     let currentFeedbackLogIndex = null;
