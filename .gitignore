@@ -4,3 +4,4 @@ Thumbs.db
 *.tmp
 .idea/
 .vscode/
+.gmail_config.json

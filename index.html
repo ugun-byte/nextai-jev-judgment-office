@@ -1251,6 +1251,9 @@
       </div>
 
       <button id="jevKeyBtn" class="btn" style="background: rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.4); color: #fbbf24;" onclick="openJevApiKeyModal()">🔑 Jev API 키</button>
+      <button id="gmailBtn" class="btn" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; display: inline-flex; align-items: center; gap: 6px;" onclick="openGmailModal()">
+        📧 지메일 연동 <span id="gmailBadge" style="background: rgba(239, 68, 68, 0.7); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 700;">OFF</span>
+      </button>
 
       <button class="btn" onclick="openOllamaGuide()">🔌 연결 설정</button>
       <button class="btn" onclick="openRationaleModal()">💡 설계 의도</button>
@@ -1365,6 +1368,9 @@
             <span id="autoRunIcon">▶️</span> 자동 실행 (Auto-run)
           </button>
           <button class="btn" onclick="openNewMsgModal()">직접 작성</button>
+          <button id="gmailQuickFetchBtn" class="btn" style="background: rgba(239, 68, 68, 0.18); border-color: rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 6px;" onclick="fetchGmailUnreadNow()" title="지메일 수신함에서 새 문의 메일을 즉시 가져와 3D 오피스로 투하합니다">
+            📬 새 메일 가져오기
+          </button>
         </div>
       </div>
     </div>
@@ -1591,6 +1597,139 @@
       <div class="modal-footer">
         <button class="btn" onclick="clearJevApiKey()">키 삭제</button>
         <button class="btn btn-primary" onclick="saveJevApiKey()">API 키 저장 및 적용</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Gmail Integration & Real-time Dispatch -->
+  <div id="gmailModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 660px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">📧</span>
+          <div>
+            <h3 style="margin: 0; font-size: 17px;">Gmail(지메일) 실시간 연동 & 자동 분류</h3>
+            <p style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">실제 고객이 보낸 문의 메일을 수신하여 3D 오피스로 투입하고 AI가 자동 분류합니다.</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('gmailModal')">✕</button>
+      </div>
+
+      <div class="modal-body" style="max-height: 72vh; overflow-y: auto;">
+        <!-- Status Indicator Card -->
+        <div id="gmailStatusCard" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 10px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div id="gmailStatusDot" style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);"></div>
+            <div>
+              <div id="gmailStatusTitle" style="font-size: 13px; font-weight: 700; color: #f8fafc;">연결 상태: 미설정</div>
+              <div id="gmailStatusDesc" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Gmail 계정과 Google 앱 비밀번호를 등록하세요.</div>
+            </div>
+          </div>
+          <button class="btn" style="font-size: 11px; padding: 4px 10px;" onclick="testGmailConnection(true)">🧪 연결 테스트</button>
+        </div>
+
+        <!-- Account Settings -->
+        <div style="background: rgba(18, 24, 38, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+          <h4 style="font-size: 13px; font-weight: 700; color: #a5b4fc; margin-bottom: 10px;">1. 계정 및 인증 설정</h4>
+          
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-main);">Gmail 주소</label>
+            <input type="email" id="gmailEmailInput" class="form-control" placeholder="my_business@gmail.com" autocomplete="email">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-main);">Google 앱 비밀번호 (16자리)</label>
+              <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #818cf8; text-decoration: underline;">
+                Google 앱 비밀번호 생성 바로가기 ↗
+              </a>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <input type="password" id="gmailPasswordInput" class="form-control" placeholder="abcd efgh ijkl mnop" style="font-family: monospace; letter-spacing: 1px;">
+              <button class="btn" type="button" onclick="toggleGmailPwVisibility()" id="gmailPwToggleBtn">👁️ 보기</button>
+            </div>
+            <span style="font-size: 10px; color: var(--text-dim); margin-top: 5px; display: block;">
+              🔒 보안 안내: 계정 정보는 외부 서버에 전송되지 않으며, 사용자의 로컬 서버(.gmail_config.json)에만 안전하게 보관됩니다.
+            </span>
+          </div>
+
+          <!-- App Password Easy Guide Accordion -->
+          <div style="margin-top: 10px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; padding: 10px 12px; font-size: 11px; line-height: 1.5; color: #cbd5e1;">
+            <div style="font-weight: 700; color: #a5b4fc; margin-bottom: 4px;">💡 16자리 Google 앱 비밀번호 발급 방법:</div>
+            <ol style="margin-left: 18px; margin-top: 4px;">
+              <li><a href="https://myaccount.google.com" target="_blank" style="color: #93c5fd;">Google 계정 관리</a>에서 <strong>'2단계 인증'</strong> 활성화 확인</li>
+              <li><a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: #93c5fd;">앱 비밀번호 생성 페이지</a> 접속</li>
+              <li>앱 이름에 <strong>"NextAI오피스"</strong> 입력 후 <strong>[만들기]</strong> 클릭</li>
+              <li>화면에 뜨는 <strong>16자리 영문 코드</strong>를 복사하여 위 입력란에 붙여넣기</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Sync & Automation Options -->
+        <div style="background: rgba(18, 24, 38, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+          <h4 style="font-size: 13px; font-weight: 700; color: #a5b4fc; margin-bottom: 12px;">2. 수신 자동화 및 옵션</h4>
+          
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12px; color: var(--text-main);">
+              <input type="checkbox" id="gmailAutoSyncCheckbox" style="width: 16px; height: 16px; accent-color: var(--primary);">
+              <div>
+                <strong>실시간 자동 수신 (Auto-Sync Polling) 활성화</strong>
+                <div style="font-size: 11px; color: var(--text-dim);">새 문의 메일이 지메일함에 도착하면 3D 오피스로 즉시 공압 튜브를 발사합니다.</div>
+              </div>
+            </label>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 26px;">
+              <span style="font-size: 12px; color: var(--text-muted);">수신 확인 주기:</span>
+              <select id="gmailIntervalSelect" class="form-control" style="width: 130px; font-size: 12px;">
+                <option value="15">15초마다 확인</option>
+                <option value="30" selected>30초마다 확인</option>
+                <option value="60">1분마다 확인</option>
+                <option value="120">2분마다 확인</option>
+              </select>
+            </div>
+
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12px; color: var(--text-main); margin-top: 4px;">
+              <input type="checkbox" id="gmailMarkReadCheckbox" style="width: 16px; height: 16px; accent-color: var(--primary);">
+              <div>
+                <strong>오피스로 수신한 메일은 지메일함에서 '읽음' 처리</strong>
+                <div style="font-size: 11px; color: var(--text-dim);">체크 해제 시 지메일 수신함에서 '안 읽음(UNSEEN)' 상태를 그대로 유지합니다.</div>
+              </div>
+            </label>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 26px;">
+              <span style="font-size: 12px; color: var(--text-muted);">1회 최대 처리 건수:</span>
+              <select id="gmailLimitSelect" class="form-control" style="width: 130px; font-size: 12px;">
+                <option value="1">1건씩 처리</option>
+                <option value="3" selected>최대 3건씩 처리</option>
+                <option value="5">최대 5건씩 처리</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Ingested Mail History -->
+        <div style="background: rgba(18, 24, 38, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h4 style="font-size: 13px; font-weight: 700; color: #a5b4fc;">3. 최근 감지된 이메일 큐</h4>
+            <span id="gmailRecentCountBadge" style="font-size: 10px; background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 2px 8px; border-radius: 10px;">0건</span>
+          </div>
+          <div id="gmailRecentList" style="max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 11px;">
+            <div style="text-align: center; color: var(--text-dim); padding: 16px 0;">
+              아직 수신된 지메일이 없습니다. '지금 새 메일 가져오기'를 눌러보세요.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn" onclick="clearGmailSettings()" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">계정 초기화</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn" onclick="closeModal('gmailModal')">닫기</button>
+          <button class="btn btn-primary" onclick="saveGmailSettings()">💾 설정 저장</button>
+          <button class="btn" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; font-weight: 700; border: none; box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);" onclick="fetchGmailUnreadNow()">
+            🚀 지금 새 메일 가져오기
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -4374,6 +4513,402 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
       setMode(currentMode);
     }
 
+    /* ==========================================================================
+       13-B. GMAIL INTEGRATION & AUTO-SYNC ENGINE
+       ========================================================================== */
+    let isFetchingGmail = false;
+    let gmailAutoSyncTimer = null;
+    let ingestedEmailsHistory = [];
+
+    function openGmailModal() {
+      document.getElementById("gmailModal").style.display = "flex";
+      loadGmailConfig();
+    }
+
+    function toggleGmailPwVisibility() {
+      const input = document.getElementById("gmailPasswordInput");
+      const btn = document.getElementById("gmailPwToggleBtn");
+      if (!input || !btn) return;
+      if (input.type === "password") {
+        input.type = "text";
+        btn.innerText = "🔒 숨김";
+      } else {
+        input.type = "password";
+        btn.innerText = "👁️ 보기";
+      }
+    }
+
+    function updateGmailBadge(connected, isAuto = false) {
+      const badge = document.getElementById("gmailBadge");
+      const btn = document.getElementById("gmailBtn");
+      if (!badge || !btn) return;
+
+      if (connected && isAuto) {
+        badge.innerText = "AUTO ON 🟢";
+        badge.style.background = "rgba(16, 185, 129, 0.85)";
+        btn.style.color = "#86efac";
+        btn.style.borderColor = "rgba(16, 185, 129, 0.5)";
+        btn.style.background = "rgba(16, 185, 129, 0.15)";
+      } else if (connected) {
+        badge.innerText = "연결됨 🟡";
+        badge.style.background = "rgba(245, 158, 11, 0.85)";
+        btn.style.color = "#fde047";
+        btn.style.borderColor = "rgba(245, 158, 11, 0.5)";
+        btn.style.background = "rgba(245, 158, 11, 0.15)";
+      } else {
+        badge.innerText = "OFF 🔴";
+        badge.style.background = "rgba(239, 68, 68, 0.7)";
+        btn.style.color = "#fca5a5";
+        btn.style.borderColor = "rgba(239, 68, 68, 0.4)";
+        btn.style.background = "rgba(239, 68, 68, 0.15)";
+      }
+    }
+
+    function showFloatingToast(title, msg, icon = "📬", duration = 4000) {
+      const toast = document.getElementById("floatingToast");
+      if (!toast) return;
+      document.getElementById("floatingToastTitle").innerText = title;
+      document.getElementById("floatingToastMsg").innerText = msg;
+      document.getElementById("floatingToastIcon").innerText = icon;
+      toast.style.display = "block";
+      if (window._toastTimer) clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.style.display = "none";
+      }, duration);
+    }
+
+    async function loadGmailConfig() {
+      if (window.location.protocol === "file:") {
+        const desc = document.getElementById("gmailStatusDesc");
+        if (desc) desc.innerText = "⚠️ file:// 프로토콜에서는 Gmail API 호출이 제한됩니다. http://localhost:8888 로 접속하세요.";
+        return;
+      }
+      try {
+        const res = await fetch("/api/email/config");
+        const data = await res.json();
+        if (!data.ok) return;
+
+        if (data.email) {
+          const emailInput = document.getElementById("gmailEmailInput");
+          if (emailInput) emailInput.value = data.email;
+        }
+        if (data.has_password) {
+          const pwInput = document.getElementById("gmailPasswordInput");
+          if (pwInput) pwInput.placeholder = "•••••••••••••••• (안전하게 저장됨 - 수정 시 재입력)";
+        }
+        const autoSyncCb = document.getElementById("gmailAutoSyncCheckbox");
+        if (autoSyncCb) autoSyncCb.checked = !!data.auto_sync;
+
+        const intervalSel = document.getElementById("gmailIntervalSelect");
+        if (intervalSel && data.sync_interval) intervalSel.value = data.sync_interval;
+
+        const markReadCb = document.getElementById("gmailMarkReadCheckbox");
+        if (markReadCb) markReadCb.checked = !!data.mark_read;
+
+        const statusTitle = document.getElementById("gmailStatusTitle");
+        const statusDesc = document.getElementById("gmailStatusDesc");
+        const statusDot = document.getElementById("gmailStatusDot");
+
+        if (data.email && data.has_password) {
+          if (statusTitle) statusTitle.innerText = "Gmail 계정 등록 완료 (" + data.email + ")";
+          if (statusDesc) statusDesc.innerText = data.auto_sync ? `실시간 자동 수신 작동 중 (${data.sync_interval}초 주기)` : "수동 수신 대기 중 (연결 테스트 완료)";
+          if (statusDot) {
+            statusDot.style.background = data.auto_sync ? "#10b981" : "#3b82f6";
+            statusDot.style.boxShadow = data.auto_sync ? "0 0 8px rgba(16, 185, 129, 0.6)" : "0 0 8px rgba(59, 130, 246, 0.6)";
+          }
+          updateGmailBadge(true, data.auto_sync);
+
+          if (data.auto_sync) {
+            startGmailAutoSync(data.sync_interval || 30);
+          }
+        } else {
+          updateGmailBadge(false);
+        }
+      } catch (err) {
+        console.warn("loadGmailConfig warning:", err);
+      }
+    }
+
+    async function testGmailConnection(fromModal = false) {
+      if (window.location.protocol === "file:") {
+        alert("⚠️ file:// 로 열려 있어 로컬 Python 서버와 통신할 수 없습니다.\nhttp://localhost:8888 로 접속하여 이용해주세요.");
+        return;
+      }
+      const email = document.getElementById("gmailEmailInput").value.trim();
+      const password = document.getElementById("gmailPasswordInput").value.trim();
+
+      const statusTitle = document.getElementById("gmailStatusTitle");
+      const statusDesc = document.getElementById("gmailStatusDesc");
+      const statusDot = document.getElementById("gmailStatusDot");
+
+      if (statusTitle) statusTitle.innerText = "연결 확인 중...";
+      if (statusDesc) statusDesc.innerText = "Gmail IMAP 서버(imap.gmail.com:993) 접속 및 보안 인증 시도 중...";
+      if (statusDot) {
+        statusDot.style.background = "#f59e0b";
+        statusDot.style.boxShadow = "0 0 8px rgba(245, 158, 11, 0.6)";
+      }
+
+      try {
+        const res = await fetch("/api/email/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, app_password: password })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          if (statusTitle) statusTitle.innerText = "인증 성공 (정상 가동 가능)";
+          if (statusDesc) statusDesc.innerText = `[${email || '등록된 계정'}] Gmail 접속 및 수신함 접근 확인 완료`;
+          if (statusDot) {
+            statusDot.style.background = "#10b981";
+            statusDot.style.boxShadow = "0 0 8px rgba(16, 185, 129, 0.6)";
+          }
+          showFloatingToast("Gmail 연결 성공!", `계정 [${email || '등록된 계정'}] 인증이 확인되었습니다.`, "✅", 4000);
+          updateGmailBadge(true, document.getElementById("gmailAutoSyncCheckbox").checked);
+        } else {
+          if (statusTitle) statusTitle.innerText = "연결 실패";
+          if (statusDesc) statusDesc.innerText = data.error || "인증 정보를 다시 확인해주세요.";
+          if (statusDot) {
+            statusDot.style.background = "#ef4444";
+            statusDot.style.boxShadow = "0 0 8px rgba(239, 68, 68, 0.6)";
+          }
+          alert("❌ Gmail 연결 실패:\n\n" + data.error);
+          updateGmailBadge(false);
+        }
+      } catch (err) {
+        if (statusTitle) statusTitle.innerText = "서버 통신 오류";
+        if (statusDesc) statusDesc.innerText = err.message;
+        alert("서버 연결 실패: " + err.message);
+      }
+    }
+
+    async function saveGmailSettings() {
+      if (window.location.protocol === "file:") {
+        alert("⚠️ file:// 로 열려 있어 설정을 저장할 수 없습니다.\nhttp://localhost:8888 로 접속하여 이용해주세요.");
+        return;
+      }
+      const email = document.getElementById("gmailEmailInput").value.trim();
+      const password = document.getElementById("gmailPasswordInput").value.trim();
+      const autoSync = document.getElementById("gmailAutoSyncCheckbox").checked;
+      const interval = parseInt(document.getElementById("gmailIntervalSelect").value || "30");
+      const markRead = document.getElementById("gmailMarkReadCheckbox").checked;
+
+      if (!email) {
+        alert("이메일 주소를 입력해주세요.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/email/save_config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            app_password: password,
+            auto_sync: autoSync,
+            sync_interval: interval,
+            mark_read: markRead
+          })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          showFloatingToast("Gmail 설정 저장 완료", autoSync ? `실시간 자동 수신 시작 (${interval}초 간격)` : "수동 수신 모드로 저장되었습니다.", "💾", 4000);
+          if (autoSync) {
+            startGmailAutoSync(interval);
+          } else {
+            stopGmailAutoSync();
+          }
+          updateGmailBadge(true, autoSync);
+          closeModal("gmailModal");
+        } else {
+          alert("설정 저장 실패: " + data.error);
+        }
+      } catch (err) {
+        alert("저장 오류: " + err.message);
+      }
+    }
+
+    async function clearGmailSettings() {
+      if (!confirm("정말 등록된 Gmail 연동 설정을 초기화하시겠습니까?")) return;
+      try {
+        await fetch("/api/email/clear_config", { method: "POST" });
+        document.getElementById("gmailEmailInput").value = "";
+        document.getElementById("gmailPasswordInput").value = "";
+        document.getElementById("gmailPasswordInput").placeholder = "abcd efgh ijkl mnop";
+        document.getElementById("gmailAutoSyncCheckbox").checked = false;
+        stopGmailAutoSync();
+        updateGmailBadge(false);
+        const statusTitle = document.getElementById("gmailStatusTitle");
+        const statusDesc = document.getElementById("gmailStatusDesc");
+        const statusDot = document.getElementById("gmailStatusDot");
+        if (statusTitle) statusTitle.innerText = "연결 상태: 미설정";
+        if (statusDesc) statusDesc.innerText = "Gmail 계정과 Google 앱 비밀번호를 등록하세요.";
+        if (statusDot) {
+          statusDot.style.background = "#ef4444";
+          statusDot.style.boxShadow = "0 0 8px rgba(239, 68, 68, 0.6)";
+        }
+        showFloatingToast("설정 초기화", "Gmail 계정 설정이 삭제되었습니다.", "🗑️", 3000);
+      } catch (err) {
+        alert("초기화 실패: " + err.message);
+      }
+    }
+
+    function startGmailAutoSync(intervalSec) {
+      stopGmailAutoSync();
+      const sec = Math.max(10, intervalSec || 30);
+      gmailAutoSyncTimer = setInterval(async () => {
+        await fetchGmailUnreadNow(true);
+        await checkInboundWebhookQueue();
+      }, sec * 1000);
+      console.log(`[NextAI Gmail] 실시간 자동 수신 감지 가동 (${sec}초 주기)`);
+    }
+
+    function stopGmailAutoSync() {
+      if (gmailAutoSyncTimer) {
+        clearInterval(gmailAutoSyncTimer);
+        gmailAutoSyncTimer = null;
+        console.log("[NextAI Gmail] 실시간 자동 수신 감지 중지");
+      }
+    }
+
+    async function fetchGmailUnreadNow(isBackground = false) {
+      if (window.location.protocol === "file:") {
+        if (!isBackground) {
+          alert("⚠️ file:// 로 열려 있어 Gmail을 가져올 수 없습니다.\nhttp://localhost:8888 로 접속하여 이용해주세요.");
+        }
+        return;
+      }
+      if (isFetchingGmail) return;
+      isFetchingGmail = true;
+
+      const quickBtn = document.getElementById("gmailQuickFetchBtn");
+      if (quickBtn && !isBackground) {
+        quickBtn.innerText = "⏳ 메일 수신 중...";
+        quickBtn.disabled = true;
+      }
+
+      try {
+        const limit = parseInt(document.getElementById("gmailLimitSelect")?.value || "3");
+        const markRead = document.getElementById("gmailMarkReadCheckbox")?.checked || false;
+
+        const res = await fetch("/api/email/fetch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ limit: limit, mark_read: markRead })
+        });
+        const data = await res.json();
+
+        if (!data.ok) {
+          if (!isBackground) {
+            alert("⚠️ 메일 수신 실패:\n\n" + (data.error || "알 수 없는 오류"));
+            openGmailModal();
+          }
+          return;
+        }
+
+        const emails = data.emails || [];
+        if (emails.length === 0) {
+          if (!isBackground) {
+            showFloatingToast("Gmail 수신함 확인 완료", "도착한 새 미열람(UNSEEN) 문의 메일이 없습니다.", "ℹ️", 3000);
+          }
+          return;
+        }
+
+        showFloatingToast("새 고객 문의 이메일 감지!", `${emails.length}건의 실제 고객 메일을 3D 오피스로 투하합니다.`, "🚀", 5000);
+
+        // Add to history
+        for (const em of emails) {
+          ingestedEmailsHistory.unshift({
+            sender: em.sender,
+            subject: em.subject,
+            body: em.body,
+            time: new Date().toLocaleTimeString(),
+            status: "공압 튜브 투하 완료"
+          });
+        }
+        renderGmailRecentList();
+
+        // Process sequentially
+        for (let i = 0; i < emails.length; i++) {
+          const emailItem = emails[i];
+          if (i > 0) {
+            await sleep(3500); // 3.5s delay so physically realistic
+          }
+          processIncomingMessage({
+            sender: emailItem.sender,
+            subject: emailItem.subject,
+            body: emailItem.body
+          });
+        }
+
+      } catch (err) {
+        console.error("fetchGmailUnreadNow error:", err);
+        if (!isBackground) {
+          alert("서버 통신 실패: " + err.message);
+        }
+      } finally {
+        isFetchingGmail = false;
+        if (quickBtn) {
+          quickBtn.innerText = "📬 새 메일 가져오기";
+          quickBtn.disabled = false;
+        }
+      }
+    }
+
+    async function checkInboundWebhookQueue() {
+      try {
+        const res = await fetch("/api/email/queue");
+        const data = await res.json();
+        if (data.ok && data.emails && data.emails.length > 0) {
+          showFloatingToast("외부 웹훅 메일 수신!", `${data.emails.length}건의 문의가 접수되었습니다.`, "🌐", 4000);
+          for (const em of data.emails) {
+            processIncomingMessage({
+              sender: em.sender,
+              subject: em.subject,
+              body: em.body
+            });
+            await sleep(3500);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function renderGmailRecentList() {
+      const container = document.getElementById("gmailRecentList");
+      const countBadge = document.getElementById("gmailRecentCountBadge");
+      if (!container) return;
+
+      if (countBadge) countBadge.innerText = `${ingestedEmailsHistory.length}건`;
+
+      if (ingestedEmailsHistory.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-dim); padding: 16px 0;">
+            아직 수신된 지메일이 없습니다. '지금 새 메일 가져오기'를 눌러보세요.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = ingestedEmailsHistory.map(item => `
+        <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 6px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">
+            <div style="font-weight: 700; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              📬 ${escapeHtml(item.subject)}
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">
+              ${escapeHtml(item.sender)} · ${item.time}
+            </div>
+          </div>
+          <span style="font-size: 10px; background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 6px; border-radius: 4px; white-space: nowrap;">
+            ${item.status}
+          </span>
+        </div>
+      `).join("");
+    }
+
     function openNewMsgModal() { document.getElementById("newMsgModal").style.display = "flex"; }
     function openOllamaGuide() { document.getElementById("ollamaGuideModal").style.display = "flex"; }
     function openRationaleModal() { document.getElementById("rationaleModal").style.display = "flex"; }
@@ -4564,7 +5099,21 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
             });
         }
       }
+
+      // 7. Load & Initialize Gmail Integration
+      loadGmailConfig();
     });
   </script>
+
+  <!-- Floating Toast Notification -->
+  <div id="floatingToast" style="display: none; position: fixed; top: 76px; right: 24px; z-index: 9999; background: rgba(15, 23, 42, 0.95); border: 1px solid #6366f1; border-radius: 12px; padding: 12px 18px; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(12px); max-width: 380px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span id="floatingToastIcon" style="font-size: 24px;">📬</span>
+      <div>
+        <div id="floatingToastTitle" style="font-size: 13px; font-weight: 700; color: #818cf8;">새 이메일 도착!</div>
+        <div id="floatingToastMsg" style="font-size: 11px; color: #cbd5e1; margin-top: 2px; line-height: 1.4;"></div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
