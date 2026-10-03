@@ -1346,7 +1346,7 @@
       <!-- Quick Control Toolbar -->
       <div class="control-toolbar">
         <div class="sample-select-group">
-          <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">⚡️ 실무 예제 10선:</span>
+          <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">⚡️ 실무 예제 12선:</span>
           <select id="exampleSelect" class="custom-select" onchange="loadSelectedExample()">
             <option value="" disabled selected>테스트할 비즈니스 메일을 선택하세요...</option>
             <option value="0">1. [표준 환불] 3일 전 결제 강의 수강 취소 및 전액 환불 요청</option>
@@ -1359,6 +1359,8 @@
             <option value="7">8. [학습 질문] Transformer Multi-Head Attention 수식 및 차원</option>
             <option value="8">9. [모호/CEO] 환불을 해주시든가 아님 같이 동업해서 강의 찍어요</option>
             <option value="9">10. [잡담/스팸] 영상 잘 보고 있어요! 타건 소리 좋은 키보드 뭐예요?</option>
+            <option value="10">11. [광고/도서홍보] (광고)🎁 골든래빗 신작 도서 출간 예약판매 안내</option>
+            <option value="11">12. [매출/결제완료] [결제승인] 홍길동님의 'AI 에이전트 마스터' 결제 완료 알림</option>
           </select>
           <button class="btn btn-primary" onclick="sendSelectedExample()">공압 튜브 투입 🚀</button>
         </div>
@@ -1386,6 +1388,14 @@
 
       <!-- Tab 1: Live Decision Inspector -->
       <div id="tab-inspector" class="tab-content">
+        <!-- Priority Alert Banner (0단계 중요도 분석 표시) -->
+        <div id="inspPriorityBanner" style="display: none; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-weight: 700; font-size: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="inspPriorityBadge">🟡 중요: 결제·매출 확인 필요</span>
+          </div>
+          <span id="inspPriorityActionDesc" style="font-size: 11px; font-weight: 500; opacity: 0.9;">신규 유료 결제 승인 내역</span>
+        </div>
+
         <!-- Target Department Active Highlight Banner -->
         <div id="targetDeptBanner" class="target-dept-banner" style="display: none;">
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -1483,6 +1493,7 @@
           <thead>
             <tr>
               <th>시간</th>
+              <th>중요도</th>
               <th>발신자 / 제목</th>
               <th>경로 / 신뢰도</th>
               <th>최종 액션</th>
@@ -1491,7 +1502,7 @@
           </thead>
           <tbody id="logTableBody">
             <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 30px;">
+              <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">
                 아직 처리된 의사결정 로그가 없습니다.
               </td>
             </tr>
@@ -1993,18 +2004,37 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
        1. DATA STRUCTURES & DEFAULT EXPERT DECISION CHAIN (100% KOREAN DEPT NAMES)
        ========================================================================== */
     const DEFAULT_DECISION_TREE = {
-      rootQuestionId: "category",
+      rootQuestionId: "triage_priority",
       questions: {
+        "triage_priority": {
+          id: "triage_priority",
+          nameKo: "0단계: 메일 성격 및 중요도 분석",
+          type: "choice",
+          instructions: "Analyze the fundamental nature and priority tier of this incoming email: is it an unsolicited marketing ad/newsletter to archive, a vital payment confirmation, an urgent CEO issue, or an operational customer inquiry?",
+          criteria: {
+            "archive_noise": "Unsolicited promotional ads, book releases, marketing newsletters, product launches, automated broadcasts, or spam starting with (광고). Excludes business collaboration proposals.",
+            "payment_confirmed": "Payment successful notifications, new sales orders, purchase receipts, billing approvals, card transaction confirmations, or wire deposit alerts requiring revenue verification (excludes disputes or refund requests).",
+            "urgent_ceo": "Critical payment duplicate charge disputes, consumer protection agency complaints, severe legal/tax risks, or emergency corporate issues requiring immediate CEO intervention.",
+            "operational_inquiry": "Legitimate student/customer questions, course inquiries, technical code bugs, platform access issues, corporate B2B training requests, or standard business partnership proposals."
+          },
+          threshold: 0.50,
+          routes: {
+            "archive_noise": { type: "action", target: "action_smart_archive" },
+            "payment_confirmed": { type: "action", target: "action_billing_receipt" },
+            "urgent_ceo": { type: "action", target: "action_urgent_refund" },
+            "operational_inquiry": { type: "question", target: "category" }
+          }
+        },
         "category": {
           id: "category",
-          nameKo: "1차 문의 부서 분류",
+          nameKo: "1차 업무 부서 심층 분류",
           type: "choice",
-          instructions: "Classify incoming email into the primary operational department.",
+          instructions: "Classify incoming operational inquiry into the specialized handling team.",
           criteria: {
-            "billing": "Payments, purchases, receipts, invoices, and refund requests",
-            "technical": "Code bugs, login issues, video playback errors, Colab environment setup",
-            "partnership": "Corporate training workshops, speaker invitations, YouTube sponsorships, and business collaboration",
-            "mentoring": "Course content questions, AI theoretical advice, and career coaching"
+            "billing": "General payment questions, invoice/receipt copies, and refund requests",
+            "technical": "Code errors, CUDA bugs, login failure, and system technical issues",
+            "partnership": "Corporate B2B training, sponsorship, and business collaboration",
+            "mentoring": "AI theory questions, lecture mentoring, and study guidance"
           },
           threshold: 0.50,
           routes: {
@@ -2076,15 +2106,29 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
         }
       },
       actions: {
-        "action_standard_refund": {
-          id: "action_standard_refund",
-          deptName: "💳 결제/환불팀 (페이봇)",
+        "action_smart_archive": {
+          id: "action_smart_archive",
+          deptName: "🗄️ 스마트보관팀 (클린봇)",
+          employeeName: "클린봇",
+          taskType: "광고/뉴스레터 식별, AI 핵심 요약 및 업무 방해 없는 무소음 보관",
+          avatar: "🗄️",
+          color: 0x64748b,
+          priority: "archive",
+          priorityLabel: "⚪️ 단순보관",
+          deskPos: [-10.5, 0, -5.5],
+          draftTemplate: "단방향 홍보 및 정기 뉴스레터로 자동 식별되어 아카이빙 보관함에 안전하게 저장되었습니다. 대표님의 확인이 필요하지 않은 참고용 자료입니다."
+        },
+        "action_billing_receipt": {
+          id: "action_billing_receipt",
+          deptName: "🧾 결제·매출확인팀 (페이봇)",
           employeeName: "페이봇",
-          taskType: "표준 환불 규정 안내 및 회신 초안 작성",
-          avatar: "🤖",
+          taskType: "신규 결제 승인 확인, 매출 기록 및 세무 영수증/수강증 자동 처리",
+          avatar: "🧾",
           color: 0x38bdf8,
-          deskPos: [-8, 0, -3],
-          draftTemplate: "안녕하세요 수강생님, NextAI 결제/환불팀입니다. 결제하신 강의의 전액 환불 접수가 정상 완료되었습니다. 카드사 영업일 기준 3~5일 내에 결제 승인 취소가 반영될 예정입니다."
+          priority: "high",
+          priorityLabel: "🟡 중요(매출/결제)",
+          deskPos: [-7.5, 0, -2.5],
+          draftTemplate: "신규 유료 결제 승인이 확인되었습니다. 매출 전표 기록 및 세무 증빙용 영수증, 수강확인증 발행 프로세스를 완료하였습니다."
         },
         "action_urgent_refund": {
           id: "action_urgent_refund",
@@ -2093,18 +2137,22 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
           taskType: "즉시 승인 취소 연동 및 대표 결재 사과문 초안",
           avatar: "🚨",
           color: 0xef4444,
-          deskPos: [-8, 0, 4],
+          priority: "critical",
+          priorityLabel: "🔴 긴급(CEO결재)",
+          deskPos: [-7.5, 0, 4.5],
           draftTemplate: "수강생님 대단히 죄송합니다. 긴급재무리스크팀에서 결제 시스템 상의 중복 승인 오류를 확인하여 즉시 카드사 승인 취소 및 이중 출금액 환급 조치를 완료하였습니다. 대표이사 명의의 정중한 사과와 함께 멤버십 1개월 무료 연장 혜택을 제공해 드립니다."
         },
-        "action_billing_receipt": {
-          id: "action_billing_receipt",
-          deptName: "🧾 결제지원팀 (페이봇)",
-          employeeName: "페이봇",
-          taskType: "영수증/세금계산서 발행 및 수강증 첨부 회신",
-          avatar: "🧾",
-          color: 0x38bdf8,
-          deskPos: [-8, 0, -3],
-          draftTemplate: "안녕하세요! 결제지원팀입니다. 요청하신 법인 교육비 증빙용 카드 매출전표와 사업자등록증 사본, 그리고 수강확인증 PDF 문서를 메일로 첨부해 드립니다. 세무 증빙 처리에 도움되시길 바랍니다."
+        "action_standard_refund": {
+          id: "action_standard_refund",
+          deptName: "💳 고객지원팀 (서포트봇)",
+          employeeName: "서포트봇",
+          taskType: "표준 환불 규정 안내 및 회신 초안 작성",
+          avatar: "🤖",
+          color: 0x3b82f6,
+          priority: "normal",
+          priorityLabel: "🟢 일반(환불안내)",
+          deskPos: [-7.5, 0, 1.0],
+          draftTemplate: "안녕하세요 수강생님, NextAI 결제/환불팀입니다. 결제하신 강의의 전액 환불 접수가 정상 완료되었습니다. 카드사 영업일 기준 3~5일 내에 결제 승인 취소가 반영될 예정입니다."
         },
         "action_code_debug": {
           id: "action_code_debug",
@@ -2113,6 +2161,8 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
           taskType: "Colab 코드 재현 및 OOM 회피 가이드 스니펫 제공",
           avatar: "💻",
           color: 0x10b981,
+          priority: "normal",
+          priorityLabel: "🟢 일반(기술지원)",
           deskPos: [-2, 0, -3],
           draftTemplate: "안녕하세요 수강생님! 코드디버그팀 코드봇입니다. Colab T4 무료 GPU 환경에서 OOM이 발생하는 원인은 attention caching 크기 때문입니다. batch_size를 2로 줄이고 gradient_accumulation_steps=4를 추가한 해결 코드 스니펫을 공유해 드립니다."
         },
@@ -2123,6 +2173,8 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
           taskType: "500 에러 캐시 플러시 및 세션 계정 즉시 복구",
           avatar: "⚙️",
           color: 0xeab308,
+          priority: "normal",
+          priorityLabel: "🟢 일반(시스템운영)",
           deskPos: [-2, 0, 4],
           draftTemplate: "안녕하세요 수강생님, 시스템운영팀 서버봇입니다. 일시적인 CDN 캐시 동기화 오류로 확인되었습니다. 수강생님의 대시보드 권한을 즉각 재활성화하였으며, 수강 시청 기한을 7일 무료 연장해 드렸습니다."
         },
@@ -2133,6 +2185,8 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
           taskType: "유튜브 미드롤 PPL 단가표 및 일정 브로슈어 송부",
           avatar: "💼",
           color: 0xa855f7,
+          priority: "normal",
+          priorityLabel: "🟢 일반(제휴협력)",
           deskPos: [5, 0, -3],
           draftTemplate: "안녕하세요 담당자님, 기업제휴팀 파트너봇입니다. NextAI 채널과의 스폰서십 제안에 감사드립니다. 60초 미드롤 협찬 단가표 및 2026년 상반기 콘텐츠 편성 일정을 첨부해 드립니다. 희망하시는 업로드 일정을 회신해 주시면 진행을 도와드리겠습니다."
         },
@@ -2143,6 +2197,8 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
           taskType: "사내특강 제안 요약 및 CEO 직행 캘린더 미팅 조율",
           avatar: "🏆",
           color: 0xfbbf24,
+          priority: "critical",
+          priorityLabel: "🔴 긴급(대형B2B/CEO)",
           deskPos: [5, 0, 4],
           draftTemplate: "안녕하세요 교육담당자님! 전략제휴팀 비즈봇입니다. 대기업 대상 생성형 AI 특강 출강 제안에 깊이 감사드립니다. 요청하신 커리큘럼(4시간)과 강사료 견적서를 조율하기 위해 대표님과 직접 줌(Zoom) 미팅을 예약하실 수 있는 캘린더 링크를 안내해 드립니다."
         },
@@ -2153,6 +2209,8 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
           taskType: "이론 수식 해설 및 논문/진로 참고자료 링크 회신",
           avatar: "📚",
           color: 0x06b6d4,
+          priority: "normal",
+          priorityLabel: "🟢 일반(학습멘토링)",
           deskPos: [9, 0, 0.5],
           draftTemplate: "안녕하세요 수강생님! 학습멘토링팀 튜터봇입니다. Attention 수식에서 d_k의 제곱근으로 나누는 이유는 내적 값이 너무 커지면 softmax 함수의 기울기가 0으로 수렴(vanishing)하는 것을 방지하기 위함입니다. 상세 유도 과정을 정리한 블로그 링크를 함께 드립니다."
         }
@@ -2161,7 +2219,13 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
 
     // Korean Labels Mapping for Question Choice & Score Options
     const KOREAN_OPTION_LABELS = {
-      // category
+      // triage_priority (0단계)
+      "archive_noise": "🗄️ 단순보관 / 단방향 광고·홍보·뉴스레터 (Archive)",
+      "payment_confirmed": "💰 중요: 결제 완료 및 매출 확인 (Payment Verified)",
+      "urgent_ceo": "👑 긴급: CEO 직접 검토 및 결재 (Executive Alert)",
+      "operational_inquiry": "🏢 일반: 실제 업무/고객 문의 심층 분류 (Operational)",
+
+      // category (1단계)
       "billing": "💳 결제 및 환불 문의 (Billing)",
       "technical": "🛠 기술 오류 및 시스템 장애 (Technical)",
       "partnership": "🤝 비즈니스 제휴 및 스폰서십 (Partnership)",
@@ -2236,6 +2300,16 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
         sender: "fan_boy99@naver.com (애청자)",
         subject: "유튜브 잘 보고 있습니다 ㅎㅎ 질문 하나만 드려도 될까요?",
         body: "안녕하세요 대표님 영상 매일 챙겨보고 있는 애청자입니다! 그냥 너무 감사해서 인사 남겨요. 혹시 영상에서 사용하시는 기계식 키보드랑 모니터 제품명이 뭔가요? 영상에서 타건 소리가 너무 좋아서요 ㅎㅎ"
+      },
+      {
+        sender: "골든래빗 <noreply@goldenrabbit.co.kr>",
+        subject: "(광고)🎁 아티클 - 랄프 루프 엔지니어링이 필요할 때 🔥 신작 《이게 되네? AI 상품 이미지 만들기 제미나이·옴니·스파크·플로우·뮤직·오팔·비즈·포멜리》 출간",
+        body: "안녕하세요 독자 여러분, 골든래빗 출판사입니다. 예약 판매 소식을 전합니다. 프롬프트 엔지니어링부터 생성형 AI 멀티모달 도구 완벽 가이드북이 출간되었습니다. 지금 교보문고와 예스24에서 만나보세요!"
+      },
+      {
+        sender: "payment@inicis.com (KG이니시스 결제통보)",
+        subject: "[결제승인/매출] 홍길동님의 'AI 에이전트 마스터' 220,000원 결제 완료 알림",
+        body: "안녕하세요 대표님, 고객님의 신규 주문 결제가 정상 승인되었습니다. [주문정보] 주문번호: 2026-PAY-88301, 결제자: 홍길동, 결제금액: 220,000원(일시불), 결제수단: 현대카드, 승인일시: 2026-10-03 12:30:00. 세무 증빙 및 수강확인증 발급을 확인해주세요."
       }
     ];
 
@@ -3179,11 +3253,18 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
             }
             if (!found) {
               const body = (payload.state.subject + " " + payload.state.body).toLowerCase();
-              if (body.includes("환불") || body.includes("결제") || body.includes("카드") || body.includes("청구") || body.includes("영수증")) found = "billing";
-              else if (body.includes("에러") || body.includes("버그") || body.includes("로그인") || body.includes("500") || body.includes("cuda") || body.includes("colab")) found = "technical";
-              else if (body.includes("제휴") || body.includes("협찬") || body.includes("특강") || body.includes("파트너")) found = "partnership";
-              else if (body.includes("질문") || body.includes("상담") || body.includes("수강") || body.includes("멘토")) found = "mentoring";
-              else found = validKeys[0] || "billing";
+              if (qId === "triage_priority") {
+                if (body.includes("(광고)") || body.includes("광고") || body.includes("신작") || body.includes("출간") || body.includes("뉴스레터") || body.includes("예약판매") || body.includes("프로모션") || body.includes("웨비나")) found = "archive_noise";
+                else if (body.includes("결제승인") || body.includes("결제 완료") || body.includes("결제완료") || body.includes("매출") || body.includes("입금확인")) found = "payment_confirmed";
+                else if (body.includes("중복 청구") || body.includes("신고") || body.includes("소비자원") || body.includes("대기업 특강") || body.includes("80명")) found = "urgent_ceo";
+                else found = "operational_inquiry";
+              } else {
+                if (body.includes("환불") || body.includes("결제") || body.includes("카드") || body.includes("청구") || body.includes("영수증")) found = "billing";
+                else if (body.includes("에러") || body.includes("버그") || body.includes("로그인") || body.includes("500") || body.includes("cuda") || body.includes("colab")) found = "technical";
+                else if (body.includes("제휴") || body.includes("협찬") || body.includes("특강") || body.includes("파트너")) found = "partnership";
+                else if (body.includes("질문") || body.includes("상담") || body.includes("수강") || body.includes("멘토")) found = "mentoring";
+                else found = validKeys[0] || "billing";
+              }
             }
             matchedChoice = found;
           }
@@ -3284,7 +3365,47 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
       const answers = {};
 
       for (const [qId, qDef] of Object.entries(payload.questions)) {
-        if (qId === "category") {
+        if (qId === "triage_priority") {
+          let pNoise = 0.02, pPayment = 0.02, pUrgent = 0.02, pOp = 0.05;
+
+          const isDispute = body.includes("소비자원") || body.includes("신고") || body.includes("이중") ||
+                            body.includes("두 번") || body.includes("중복 청구") || body.includes("취소 안 해주시면");
+
+          // 1. 긴급 CEO 직행 리스크 (urgent_ceo) - 이중결제 오류/소비자원 고발 위기
+          if (isDispute) {
+            pUrgent += 0.95;
+          }
+          // 2. 중요 결제/매출/영수증 승인 확인 (payment_confirmed) - 분쟁/환불 건 제외
+          else if (!isDispute && !body.includes("환불") && !body.includes("취소") &&
+                   ((body.includes("결제") && (body.includes("완료") || body.includes("승인") || body.includes("성공") || body.includes("매출"))) ||
+                    body.includes("입금 확인") || body.includes("입금확인") || body.includes("카드 승인 알림") || body.includes("결제 완료 알림"))) {
+            pPayment += 0.95;
+          }
+          // 3. 단방향 홍보/광고/뉴스레터 (archive_noise) - 비즈니스 협찬/광고 제안서는 제외
+          else if ((body.includes("(광고)") || body.includes("출간") || body.includes("신간") || body.includes("골든래빗") ||
+                    body.includes("뉴스레터") || body.includes("newsletter") || body.includes("수신거부") || body.includes("unsubscribe")) &&
+                   !body.includes("제안서") && !body.includes("협찬") && !body.includes("ppl")) {
+            pNoise += 0.95;
+          }
+          // 4. 일반 실무 문의 (operational_inquiry) - 강의, 기술, 제휴, 특강 등 심층 부서 분류로 이동
+          else {
+            pOp += 0.95;
+          }
+
+          const sum = pNoise + pPayment + pUrgent + pOp;
+          const probs = {
+            "archive_noise": Number((pNoise / sum).toFixed(3)),
+            "payment_confirmed": Number((pPayment / sum).toFixed(3)),
+            "urgent_ceo": Number((pUrgent / sum).toFixed(3)),
+            "operational_inquiry": Number((pOp / sum).toFixed(3))
+          };
+
+          const choice = Object.keys(probs).reduce((a, b) => probs[a] > probs[b] ? a : b);
+          const topProb = probs[choice];
+          const confidence = Number((topProb > 0.6 ? 0.88 + (topProb - 0.6) * 0.22 : 0.50).toFixed(3));
+
+          answers[qId] = { type: "choice", choice, probabilities: probs, confidence };
+        } else if (qId === "category") {
           let pBilling = 0.05, pTech = 0.05, pPart = 0.05, pMent = 0.05;
 
           if (body.includes("환불") || body.includes("결제") || body.includes("카드") || body.includes("영수증") || body.includes("청구")) pBilling += 0.85;
@@ -3590,6 +3711,47 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
         char.jumpTimer = 25;
       }
 
+      // Determine Priority Tier & Styling
+      let priorityType = finalAction.priority || "normal";
+      let priorityText = finalAction.priorityLabel || "🟢 일반 (AI 자율 응대)";
+      let priorityBannerBg = "rgba(16, 185, 129, 0.15)";
+      let priorityBorder = "rgba(16, 185, 129, 0.4)";
+      let priorityColor = "#6ee7b7";
+      let priorityDesc = "일반 업무 건입니다. AI가 자율적으로 답변 초안을 작성하여 준비했습니다.";
+
+      if (finalAction.id === "action_smart_archive") {
+        priorityType = "archive";
+        priorityText = "⚪️ 단순보관 / 단방향 광고·홍보·뉴스레터";
+        priorityBannerBg = "rgba(100, 116, 139, 0.2)";
+        priorityBorder = "rgba(100, 116, 139, 0.4)";
+        priorityColor = "#cbd5e1";
+        priorityDesc = "단방향 홍보/광고/뉴스레터로 판정되어 대표의 업무 방해 없이 스마트 보관함에 안전하게 저장되었습니다.";
+      } else if (finalAction.id === "action_billing_receipt") {
+        priorityType = "high";
+        priorityText = "🟡 중요: 결제 완료 및 매출 확인 필수";
+        priorityBannerBg = "rgba(245, 158, 11, 0.2)";
+        priorityBorder = "rgba(245, 158, 11, 0.5)";
+        priorityColor = "#fbbf24";
+        priorityDesc = "실제 유료 결제 승인 또는 매출 증빙이 발생한 핵심 재무 안건입니다. 확인을 권장합니다.";
+      } else if (finalAction.id === "action_urgent_refund" || finalAction.id === "action_ceo_keynote") {
+        priorityType = "critical";
+        priorityText = "🔴 긴급: 대표이사(CEO) 직접 확인 및 결재 필요";
+        priorityBannerBg = "rgba(239, 68, 68, 0.25)";
+        priorityBorder = "rgba(239, 68, 68, 0.6)";
+        priorityColor = "#fca5a5";
+        priorityDesc = "심각한 결제/환불 분쟁 또는 대형 B2B 특강 안건으로 대표님의 최종 승인이 필수입니다.";
+      }
+
+      const pBanner = document.getElementById("inspPriorityBanner");
+      if (pBanner) {
+        pBanner.style.display = "flex";
+        pBanner.style.background = priorityBannerBg;
+        pBanner.style.border = `1px solid ${priorityBorder}`;
+        pBanner.style.color = priorityColor;
+        document.getElementById("inspPriorityBadge").innerText = priorityText;
+        document.getElementById("inspPriorityActionDesc").innerText = priorityDesc;
+      }
+
       document.getElementById("actAvatar").innerText = finalAction.avatar;
       document.getElementById("actDeptName").innerText = `담당 부서: ${finalAction.deptName}`;
       document.getElementById("actTaskType").innerText = `수행 업무: ${finalAction.taskType}`;
@@ -3605,6 +3767,8 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
         trajectory: evaluatedChain,
         finalActionId: finalAction.id,
         finalActionName: finalAction.deptName,
+        priorityType: priorityType,
+        priorityText: priorityText,
         totalTimeMs: totalTimeMs,
         isCorrect: true
       };
@@ -3808,7 +3972,7 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
       document.getElementById("logCountLabel").innerText = `(총 ${stats.logs.length}건)`;
 
       if (stats.logs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 30px;">아직 처리된 의사결정 로그가 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">아직 처리된 의사결정 로그가 없습니다.</td></tr>`;
         return;
       }
 
@@ -3825,8 +3989,18 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
           ? (log.trajectory.reduce((acc, t) => acc + (t.confidence || 0.8), 0) / log.trajectory.length * 100).toFixed(0) 
           : "90";
 
+        let pBadge = `<span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: 700; white-space: nowrap;">🟢 일반</span>`;
+        if (log.priorityType === "archive") {
+          pBadge = `<span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(100, 116, 139, 0.25); color: #94a3b8; font-weight: 700; white-space: nowrap;">⚪️ 보관</span>`;
+        } else if (log.priorityType === "high") {
+          pBadge = `<span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; font-weight: 700; white-space: nowrap;">🟡 중요(결제)</span>`;
+        } else if (log.priorityType === "critical") {
+          pBadge = `<span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(239, 68, 68, 0.25); color: #f87171; font-weight: 700; white-space: nowrap;">🔴 긴급(CEO)</span>`;
+        }
+
         tr.innerHTML = `
-          <td style="color: var(--text-dim); font-size: 10px;">${log.timestamp}</td>
+          <td style="color: var(--text-dim); font-size: 10px; white-space: nowrap;">${log.timestamp}</td>
+          <td>${pBadge}</td>
           <td>
             <div style="font-weight: 700; color: #fff;">${escapeHtml(log.subject)}</div>
             <div style="font-size: 10px; color: var(--text-muted);">${escapeHtml(log.sender)}</div>
@@ -4203,7 +4377,12 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
     function loadDecisionTree() {
       try {
         const saved = localStorage.getItem("my_ai_company_tree_3d");
-        if (saved) return JSON.parse(saved);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.questions && parsed.questions.triage_priority && parsed.actions && parsed.actions.action_smart_archive && parsed.actions.action_billing_receipt) {
+            return parsed;
+          }
+        }
       } catch (e) {}
       return JSON.parse(JSON.stringify(DEFAULT_DECISION_TREE));
     }
