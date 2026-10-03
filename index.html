@@ -2402,9 +2402,27 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
       logs: []
     };
 
+    function getLogPriorityType(log) {
+      if (!log) return "normal";
+      if (log.priorityType) return log.priorityType;
+      const actId = log.finalActionId || "";
+      const actName = log.finalActionName || "";
+      if (actId === "action_smart_archive" || actName.includes("보관") || actName.includes("클린봇")) return "archive";
+      if (actId === "action_billing_receipt" || actName.includes("매출") || actName.includes("페이봇")) return "high";
+      if (actId === "action_urgent_refund" || actId === "action_ceo_keynote" || actName.includes("긴급") || actName.includes("골드봇") || actName.includes("CEO")) return "critical";
+      return "normal";
+    }
+
     try {
       const savedLogs = localStorage.getItem("my_ai_company_logs");
-      if (savedLogs) stats.logs = JSON.parse(savedLogs);
+      if (savedLogs) {
+        stats.logs = JSON.parse(savedLogs);
+        stats.logs.forEach(log => {
+          if (!log.priorityType) {
+            log.priorityType = getLogPriorityType(log);
+          }
+        });
+      }
       stats.tasksHandled = stats.logs.length;
     } catch (e) {}
 
@@ -4052,6 +4070,28 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
        ========================================================================== */
     let activeLogPriorityFilter = 'all';
 
+    function updateLogFilterButtons() {
+      const counts = { all: stats.logs.length, critical: 0, high: 0, normal: 0, archive: 0 };
+      stats.logs.forEach(l => {
+        const p = getLogPriorityType(l);
+        if (counts[p] !== undefined) counts[p]++;
+        else counts.normal++;
+      });
+
+      const labels = {
+        all: `전체 보기 (${counts.all})`,
+        critical: `🔴 긴급(CEO 결재) (${counts.critical})`,
+        high: `🟡 중요(결제/매출) (${counts.high})`,
+        normal: `🟢 일반 실무 (${counts.normal})`,
+        archive: `⚪️ 단순보관 (${counts.archive})`
+      };
+
+      for (const [key, label] of Object.entries(labels)) {
+        const btn = document.getElementById(`logFilterBtn-${key}`);
+        if (btn) btn.innerText = label;
+      }
+    }
+
     function setLogPriorityFilter(filter) {
       activeLogPriorityFilter = filter;
       const filterBtns = ['all', 'critical', 'high', 'normal', 'archive'];
@@ -4072,12 +4112,13 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
     }
 
     function renderLogsTable() {
+      updateLogFilterButtons();
       const tbody = document.getElementById("logTableBody");
       const filteredLogs = activeLogPriorityFilter === 'all'
         ? stats.logs.map((log, originalIdx) => ({ log, originalIdx }))
         : stats.logs
             .map((log, originalIdx) => ({ log, originalIdx }))
-            .filter(item => item.log.priorityType === activeLogPriorityFilter);
+            .filter(item => getLogPriorityType(item.log) === activeLogPriorityFilter);
 
       document.getElementById("logCountLabel").innerText = `(표시: ${filteredLogs.length}건 / 총 ${stats.logs.length}건)`;
 
@@ -4092,21 +4133,22 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
         tr.style.cursor = "pointer";
         tr.title = "클릭하여 메일 본문 원문 및 AI 답변 초안 상세 보기";
 
-        const trajSnippet = log.trajectory.map(t => {
-          let ans = t.answer.choice || (t.answer.noul !== undefined ? (t.answer.noul >= 0.7 ? '환불' : '결제') : `L${Math.round(t.answer.score || 0)}`);
-          return `${t.questionNameKo}(${ans})`;
+        const trajSnippet = (log.trajectory || []).map(t => {
+          let ans = t.answer ? (t.answer.choice || (t.answer.noul !== undefined ? (t.answer.noul >= 0.7 ? '환불' : '결제') : `L${Math.round(t.answer.score || 0)}`)) : "";
+          return `${t.questionNameKo || t.questionId || '분석'}(${ans})`;
         }).join(" ➜ ");
 
-        const avgConf = log.trajectory.length > 0 
+        const avgConf = (log.trajectory && log.trajectory.length > 0)
           ? (log.trajectory.reduce((acc, t) => acc + (t.confidence || 0.8), 0) / log.trajectory.length * 100).toFixed(0) 
           : "90";
 
+        const pType = getLogPriorityType(log);
         let pBadge = `<span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: 700; white-space: nowrap;">🟢 일반</span>`;
-        if (log.priorityType === "archive") {
+        if (pType === "archive") {
           pBadge = `<span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(100, 116, 139, 0.25); color: #94a3b8; font-weight: 700; white-space: nowrap;">⚪️ 보관</span>`;
-        } else if (log.priorityType === "high") {
+        } else if (pType === "high") {
           pBadge = `<span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; font-weight: 700; white-space: nowrap;">🟡 중요(결제)</span>`;
-        } else if (log.priorityType === "critical") {
+        } else if (pType === "critical") {
           pBadge = `<span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(239, 68, 68, 0.25); color: #f87171; font-weight: 700; white-space: nowrap;">🔴 긴급(CEO)</span>`;
         }
 
