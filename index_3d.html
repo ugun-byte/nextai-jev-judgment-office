@@ -2951,10 +2951,14 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
 
       // 3. Fallback: Local SLM inference via Ollama /api/chat
       try {
-        let localEngineModel = "qwen3.5:0.8b";
+        let localEngineModel = model;
         if (installedLocalModels && installedLocalModels.length > 0) {
-          const best = installedLocalModels.find(m => m.includes("0.8b")) || installedLocalModels[0];
-          localEngineModel = best;
+          const exact = installedLocalModels.find(m => m === model || m.startsWith(model + ":") || m.split(":")[0] === model.split(":")[0]);
+          if (exact) {
+            localEngineModel = exact;
+          } else {
+            localEngineModel = installedLocalModels.find(m => m.includes("tev1")) || installedLocalModels[0];
+          }
         }
 
         const qId = Object.keys(payload.questions)[0];
