@@ -1,0 +1,4416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 AI 1인 기업 (My AI-Run One-Person Company) - 3D 4K 물리엔진 오피스</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  <!-- Three.js & OrbitControls & Cannon.js Physics Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0a0d14;
+      --bg-card: rgba(18, 24, 38, 0.88);
+      --bg-card-border: rgba(255, 255, 255, 0.08);
+      --bg-card-hover: rgba(30, 41, 59, 0.95);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.45);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.4);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.4);
+      --ceo-gold: #fbbf24;
+      --ceo-gold-glow: rgba(251, 191, 36, 0.5);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-ui: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      --font-pixel: 'Press Start 2P', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 15%, rgba(99, 102, 241, 0.16) 0%, transparent 45%),
+        radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.07) 0%, transparent 60%);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Top Bar */
+    header {
+      background: rgba(10, 13, 20, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--bg-card-border);
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #4f46e5, #ec4899);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .brand-info h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .badge-3d-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(236, 72, 153, 0.4);
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--bg-card-border);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .status-badge.local-active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      box-shadow: 0 0 12px var(--success-glow);
+    }
+
+    .status-badge.demo-active {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.5);
+      color: #fbbf24;
+      animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+      50% { box-shadow: 0 0 18px rgba(245, 158, 11, 0.6); }
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .model-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--bg-card-border);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .model-selector select {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .model-selector select option {
+      background: #181d26;
+      color: #fff;
+    }
+
+    button.btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-main);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    button.btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    button.btn:active {
+      transform: translateY(0);
+    }
+
+    button.btn-primary {
+      background: linear-gradient(135deg, var(--primary), #818cf8);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    button.btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-hover), #6366f1);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+    }
+
+    button.btn-gold {
+      background: linear-gradient(135deg, #d97706, #fbbf24);
+      color: #111827;
+      font-weight: 700;
+      border: none;
+      box-shadow: 0 4px 14px var(--ceo-gold-glow);
+    }
+
+    button.btn-gold:hover {
+      background: linear-gradient(135deg, #b45309, #f59e0b);
+      color: #000;
+    }
+
+    /* KPI Stats Bar */
+    .kpi-container {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      padding: 14px 24px;
+      background: rgba(0, 0, 0, 0.32);
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .kpi-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary);
+    }
+
+    .kpi-card.kpi-cost::before { background: #10b981; }
+    .kpi-card.kpi-time::before { background: #38bdf8; }
+    .kpi-card.kpi-acc::before { background: #ec4899; }
+    .kpi-card.kpi-ceo::before { background: #fbbf24; }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .kpi-value {
+      font-family: var(--font-pixel);
+      font-size: 15px;
+      color: #fff;
+      letter-spacing: -0.5px;
+      margin-top: 4px;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* Main Workspace Layout */
+    .main-workspace {
+      display: grid;
+      grid-template-columns: minmax(680px, 1.4fr) minmax(420px, 1fr);
+      gap: 20px;
+      padding: 20px 24px;
+      flex: 1;
+    }
+
+    /* Left: 3D Canvas Box */
+    .office-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .canvas-3d-wrapper {
+      background: #080b11;
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      height: 520px;
+    }
+
+    .canvas-header {
+      padding: 10px 16px;
+      background: rgba(12, 16, 26, 0.95);
+      border-bottom: 1px solid var(--bg-card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .canvas-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .canvas-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .speed-pill {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      border: 1px solid var(--bg-card-border);
+      overflow: hidden;
+    }
+
+    .speed-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .speed-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    #threeCanvasContainer {
+      width: 100%;
+      flex: 1;
+      position: relative;
+      cursor: grab;
+    }
+
+    #threeCanvasContainer:active {
+      cursor: grabbing;
+    }
+
+    /* Floating Camera Overlay Buttons on 3D Canvas */
+    .cam-overlay-controls {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .cam-chip {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e2e8f0;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .cam-chip:hover {
+      background: rgba(99, 102, 241, 0.8);
+      border-color: #818cf8;
+      transform: translateY(-1px);
+    }
+
+    .physics-toy-btn {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px var(--success-glow);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .physics-toy-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Target Department Active Glow Banner */
+    .target-dept-banner {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(16, 185, 129, 0.25));
+      border: 2px solid #34d399;
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: 0 0 20px var(--success-glow);
+      animation: pulse-glow-target 1.8s infinite;
+    }
+
+    @keyframes pulse-glow-target {
+      0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+      50% { box-shadow: 0 0 24px rgba(16, 185, 129, 0.8); }
+    }
+
+    .target-dept-badge {
+      background: #10b981;
+      color: #064e3b;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .target-dept-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .target-dept-status {
+      font-size: 11px;
+      color: #a7f3d0;
+      font-weight: 600;
+    }
+
+    /* Toolbar */
+    .control-toolbar {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 14px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+    }
+
+    .sample-select-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .custom-select {
+      flex: 1;
+      max-width: 320px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      color: var(--text-main);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .custom-select option {
+      background: #181d26;
+      color: #fff;
+    }
+
+    .action-button-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-auto-run.active {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 0 16px var(--success-glow);
+      animation: pulse-green 1.5s infinite;
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8); }
+    }
+
+    /* CEO Decision Alert Bar */
+    .ceo-alert-bar {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.16), rgba(245, 158, 11, 0.28));
+      border: 2px solid var(--ceo-gold);
+      border-radius: 14px;
+      padding: 14px 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 0 26px rgba(251, 191, 36, 0.4);
+      animation: bounce-subtle 1.2s infinite;
+    }
+
+    @keyframes bounce-subtle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .ceo-alert-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ceo-alert-icon {
+      font-size: 32px;
+      filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.6));
+    }
+
+    .ceo-alert-text h4 {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fbbf24;
+    }
+
+    .ceo-alert-text p {
+      font-size: 12px;
+      color: #e5e7eb;
+      margin-top: 2px;
+    }
+
+    .ceo-action-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .ceo-chip {
+      background: #1f2937;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .ceo-chip:hover {
+      background: var(--ceo-gold);
+      color: #111827;
+      transform: scale(1.05);
+    }
+
+    /* Right: Tabs & Inspector Column */
+    .inspector-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 580px;
+    }
+
+    .tabs-header {
+      display: flex;
+      background: rgba(15, 17, 23, 0.6);
+      border-bottom: 1px solid var(--bg-card-border);
+      padding: 0 8px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 14px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-content {
+      padding: 18px;
+      flex: 1;
+      overflow-y: auto;
+      max-height: calc(100vh - 240px);
+    }
+
+    /* Inspector Cards */
+    .msg-preview-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+
+    .msg-preview-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .msg-preview-subject {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .msg-preview-body {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .chain-path-banner {
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .path-steps {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .path-node-tag {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #e0e7ff;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .path-arrow {
+      color: var(--text-dim);
+      font-size: 10px;
+    }
+
+    .question-eval-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      transition: all 0.3s;
+    }
+
+    .question-eval-card.active-step {
+      border-color: var(--primary);
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .question-eval-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .question-title-area h5 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .question-en-instruction {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .question-type-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .prob-bar-row {
+      margin-top: 8px;
+    }
+
+    .prob-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+
+    .prob-opt-name {
+      font-weight: 600;
+      color: #d1d5db;
+    }
+
+    .prob-opt-value {
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      color: #fff;
+    }
+
+    .prob-track {
+      height: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .prob-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #38bdf8);
+      border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .prob-fill.winner {
+      background: linear-gradient(90deg, #10b981, #34d399);
+      box-shadow: 0 0 8px var(--success-glow);
+    }
+
+    .confidence-meter-box {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .confidence-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .confidence-visual {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .conf-bar-track {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s;
+    }
+
+    .conf-badge {
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .action-result-box {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 95, 70, 0.15));
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 16px;
+    }
+
+    .action-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .action-avatar {
+      font-size: 24px;
+    }
+
+    .action-info h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #34d399;
+    }
+
+    .action-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .draft-speech-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #f3f4f6;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    /* Tab 2: Flow Tree Editor */
+    .tree-editor-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tree-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+
+    .tree-node-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .tree-node-card.question {
+      border-left: 4px solid var(--primary);
+    }
+
+    .tree-node-card.action {
+      border-left: 4px solid var(--success);
+    }
+
+    .tree-node-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .tree-node-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .branch-list {
+      margin-top: 8px;
+      padding-left: 12px;
+      border-left: 1px dashed rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .branch-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    /* Tab 3: Decision Log & Accuracy */
+    .log-stats-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .log-table th {
+      text-align: left;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+
+    .log-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    .log-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .feedback-btn {
+      background: transparent;
+      border: 1px solid var(--bg-card-border);
+      border-radius: 4px;
+      padding: 3px 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .feedback-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .feedback-btn.active-correct {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: #10b981;
+      color: #10b981;
+    }
+
+    .feedback-btn.active-wrong {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #181d26;
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modal-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modal-pop {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--bg-card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 70vh;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--bg-card-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .cmd-box {
+      background: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #38bdf8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .cmd-copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .demo-banner-alert {
+      background: linear-gradient(90deg, #d97706, #b45309);
+      color: #fff;
+      text-align: center;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 2px 10px rgba(217, 119, 6, 0.4);
+    }
+
+    .demo-banner-alert button {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Demo Mode Alert Banner -->
+  <div id="demoBanner" class="demo-banner-alert" style="display: none;">
+    <span>⚠️ <strong>체험 모드 (Demo Mode) 가동 중</strong> · 로컬 Ollama 미연결 상태 시뮬레이션입니다 (실제 AI 판정이 아님)</span>
+    <button onclick="openOllamaGuide()">Ollama 연결 가이드 보기</button>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-section">
+      <div class="brand-logo">🏢</div>
+      <div class="brand-info">
+        <h1>나의 AI 1인 기업 <span class="badge-3d-indicator">3D 4K PHYSICS HQ</span></h1>
+        <p>1인 CEO(대표) & 로컬 판단 AI 임직원 7명의 리얼타임 3D 물리 시뮬레이션 오피스</p>
+      </div>
+      <div id="aiStatusBadge" class="status-badge local-active" onclick="toggleEngineMode()" title="클릭하여 실제 Ollama 모드 ↔ 체험 모드 전환">
+        <span class="status-dot"></span>
+        <span id="aiStatusText">로컬 Ollama 실시간 연동 (tev1:0.8b)</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Button to switch to Original 2D Pixel Version -->
+      <a href="index_original.html" class="btn" style="background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.4); color: #f472b6; text-decoration: none;">
+        🕹️ 2D 픽셀 원본 보기
+      </a>
+
+      <div class="model-selector">
+        <span>모델:</span>
+        <select id="modelSelect" onchange="onModelChange()">
+          <option value="tev1:0.8b" selected>tev1:0.8b (권장)</option>
+          <option value="tev1">tev1 (풀버전)</option>
+          <option value="jev">jev (🔑 API 키 필요)</option>
+          <option value="laya">laya</option>
+          <option value="nimble">nimble</option>
+        </select>
+      </div>
+
+      <button id="jevKeyBtn" class="btn" style="background: rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.4); color: #fbbf24;" onclick="openJevApiKeyModal()">🔑 Jev API 키</button>
+
+      <button class="btn" onclick="openOllamaGuide()">🔌 연결 설정</button>
+      <button class="btn" onclick="openRationaleModal()">💡 설계 의도</button>
+      <button id="soundToggleBtn" class="btn" onclick="toggleSound()">🔊 사운드 ON</button>
+      <button class="btn btn-gold" onclick="openNewMsgModal()">✉️ 메시지 전송</button>
+    </div>
+  </header>
+
+  <!-- KPI Top Stats Counters -->
+  <section class="kpi-container">
+    <div class="kpi-card">
+      <div class="kpi-label">📬 처리된 총 업무</div>
+      <div class="kpi-value" id="kpiTasksHandled">0건</div>
+      <div class="kpi-sub">수신 메일 자율 분기 및 초안 완료</div>
+    </div>
+    <div class="kpi-card kpi-time">
+      <div class="kpi-label">⚡️ 평균 의사결정 속도</div>
+      <div class="kpi-value" id="kpiAvgDecisionTime">0.00초</div>
+      <div class="kpi-sub">로컬 0.8b 초고속 추론 응답</div>
+    </div>
+    <div class="kpi-card kpi-cost">
+      <div class="kpi-label">💰 소모 인건비 및 API 비용</div>
+      <div class="kpi-value" id="kpiTotalCost">₩0</div>
+      <div class="kpi-sub">내 컴퓨터에서 100% 무료 연산</div>
+    </div>
+    <div class="kpi-card kpi-acc">
+      <div class="kpi-label">🎯 자동 처리 정확도</div>
+      <div class="kpi-value" id="kpiAccuracy">100%</div>
+      <div class="kpi-sub">대표 검수 피드백 기준 통계</div>
+    </div>
+    <div class="kpi-card kpi-ceo" id="kpiCeoCard">
+      <div class="kpi-label">👑 CEO 결재 대기</div>
+      <div class="kpi-value" id="kpiCeoPending">0건</div>
+      <div class="kpi-sub">신뢰도 부족 케이스 대표 컨펌</div>
+    </div>
+  </section>
+
+  <!-- Main Workspace -->
+  <main class="main-workspace">
+    <!-- Left: 3D 4K Physics Office -->
+    <div class="office-panel">
+      <!-- CEO Alert Bar (Appears when confidence < threshold) -->
+      <div id="ceoAlertBar" class="ceo-alert-bar">
+        <div class="ceo-alert-content">
+          <div class="ceo-alert-icon">👑</div>
+          <div class="ceo-alert-text">
+            <h4>[대표 결재 대기] AI 판단 신뢰도가 낮습니다! (<span id="ceoConfVal">0.42</span>)</h4>
+            <p id="ceoAlertMsgSummary">고객 문의가 모호하여 대표님의 최종 조치 결정이 필요합니다.</p>
+          </div>
+        </div>
+        <div class="ceo-action-chips" id="ceoActionChips">
+          <!-- Dynamically populated chips in Korean -->
+        </div>
+      </div>
+
+      <!-- 3D Canvas Box -->
+      <div class="canvas-3d-wrapper">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span>✨ 3D 4K 물리엔진 HQ 디오라마 (Cannon.js + Three.js)</span>
+            <span style="font-size: 11px; color: var(--text-dim);">[마우스 드래그로 360° 회전 / 줌 / 물리 오브젝트 드래그 앤 드롭 가능]</span>
+          </div>
+          <div class="canvas-controls">
+            <span style="font-size: 11px; color: var(--text-muted);">시뮬레이션 배속:</span>
+            <div class="speed-pill">
+              <button class="speed-btn active" onclick="setSimSpeed(1, this)">1x</button>
+              <button class="speed-btn" onclick="setSimSpeed(2, this)">2x</button>
+              <button class="speed-btn" onclick="setSimSpeed(4, this)">4x</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Three.js Canvas Container -->
+        <div id="threeCanvasContainer">
+          <!-- Floating Camera Presets -->
+          <div class="cam-overlay-controls">
+            <button class="cam-chip" onclick="setCameraPreset('iso')">🎥 전체 조감도</button>
+            <button class="cam-chip" onclick="setCameraPreset('ceo')">👑 CEO 집무실</button>
+            <button class="cam-chip" onclick="setCameraPreset('chute')">📬 우편 투입구</button>
+            <button class="cam-chip" onclick="setCameraPreset('front')">🏢 정면 뷰</button>
+          </div>
+
+          <!-- Physics Toybox Spawner Button -->
+          <button class="physics-toy-btn" onclick="spawnPhysicsToyCubes()">
+            🎲 물리 큐브 투하 (Physics Toybox)
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Control Toolbar -->
+      <div class="control-toolbar">
+        <div class="sample-select-group">
+          <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">⚡️ 실무 예제 10선:</span>
+          <select id="exampleSelect" class="custom-select" onchange="loadSelectedExample()">
+            <option value="" disabled selected>테스트할 비즈니스 메일을 선택하세요...</option>
+            <option value="0">1. [표준 환불] 3일 전 결제 강의 수강 취소 및 전액 환불 요청</option>
+            <option value="1">2. [위급/분쟁] 카드 결제 2번 중복 청구! 당장 취소 안하면 신고</option>
+            <option value="2">3. [결제 문의] 회사 교육비 제출용 카드 영수증 및 사업자등록증</option>
+            <option value="3">4. [코드 버그] 5강 Colab 실습 중 CUDA Out of Memory 에러</option>
+            <option value="4">5. [접속 장애] 로그인 후 대시보드 500 내부 서버 에러 발생</option>
+            <option value="5">6. [대형 특강] 삼성전자 AI연구소 50명 실전 에이전트 특강 출강</option>
+            <option value="6">7. [PPL 협찬] AI 생산성 툴 유튜브 60초 광고 스폰서십 제안서</option>
+            <option value="7">8. [학습 질문] Transformer Multi-Head Attention 수식 및 차원</option>
+            <option value="8">9. [모호/CEO] 환불을 해주시든가 아님 같이 동업해서 강의 찍어요</option>
+            <option value="9">10. [잡담/스팸] 영상 잘 보고 있어요! 타건 소리 좋은 키보드 뭐예요?</option>
+          </select>
+          <button class="btn btn-primary" onclick="sendSelectedExample()">공압 튜브 투입 🚀</button>
+        </div>
+
+        <div class="action-button-group">
+          <button id="autoRunBtn" class="btn btn-auto-run" onclick="toggleAutoRun()">
+            <span id="autoRunIcon">▶️</span> 자동 실행 (Auto-run)
+          </button>
+          <button class="btn" onclick="openNewMsgModal()">직접 작성</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Decision Inspector & Tree Editor & Logs -->
+    <div class="inspector-panel">
+      <!-- Tabs Header -->
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab('inspector', this)">🔍 실시간 판단 인스펙터</button>
+        <button class="tab-btn" onclick="switchTab('tree', this)">🌳 의사결정 트리 편집기</button>
+        <button class="tab-btn" onclick="switchTab('logs', this)">📋 판단 로그 & 피드백</button>
+      </div>
+
+      <!-- Tab 1: Live Decision Inspector -->
+      <div id="tab-inspector" class="tab-content">
+        <!-- Target Department Active Highlight Banner -->
+        <div id="targetDeptBanner" class="target-dept-banner" style="display: none;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="target-dept-badge">🎯 수신 배정</span>
+            <span class="target-dept-name" id="targetDeptNameLabel">💳 결제/환불팀 (페이봇)</span>
+          </div>
+          <div class="target-dept-status" id="targetDeptStatusLabel">메시지 분석 및 답변 작성 중... ✨</div>
+        </div>
+
+        <!-- Message Summary Card -->
+        <div class="msg-preview-card">
+          <div class="msg-preview-meta">
+            <span id="inspSender">발신자: 수신 대기 중</span>
+            <span id="inspTime">방금</span>
+          </div>
+          <div class="msg-preview-subject" id="inspSubject">현재 처리 중인 메시지가 없습니다.</div>
+          <div class="msg-preview-body" id="inspBody">아래 '실무 예제 10선'을 선택하거나 '메시지 전송' 버튼을 눌러 로컬 AI의 3D 물리 판단 체인을 가동하세요.</div>
+        </div>
+
+        <!-- Trajectory Path Banner -->
+        <div class="chain-path-banner">
+          <span style="font-size: 11px; font-weight: 700; color: #a5b4fc;">📍 의사결정 체인 이동 경로 (Decision Trajectory):</span>
+          <div class="path-steps" id="trajectorySteps">
+            <span class="path-node-tag">🚀 공압 튜브 투하</span>
+            <span class="path-arrow">➜</span>
+            <span class="path-node-tag" style="opacity: 0.5;">대기 중...</span>
+          </div>
+        </div>
+
+        <!-- Step-by-Step Questions Evaluations -->
+        <div id="questionsEvalContainer">
+          <div style="text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 12px;">
+            메시지가 도착하면 3D 오피스에서 물리 우편이 떨어지며 질문별 확률 분포 바와 신뢰도 게이지가 실시간으로 나타납니다.
+          </div>
+        </div>
+
+        <!-- Action Result Box -->
+        <div id="actionResultContainer" style="display: none;">
+          <div class="action-result-box">
+            <div class="action-header">
+              <div class="action-avatar" id="actAvatar">🤖</div>
+              <div class="action-info">
+                <h4 id="actDeptName">담당 부서: 결제/환불팀 (페이봇)</h4>
+                <p id="actTaskType">수행 업무: 표준 환불 규정 안내 및 회신 초안 작성</p>
+              </div>
+            </div>
+            <div style="font-size: 11px; font-weight: 700; color: #a7f3d0; margin-top: 6px;">📝 AI 작성 답변 초안 (Speech Draft):</div>
+            <div class="draft-speech-box" id="actSpeechDraft">
+              "안녕하세요 수강생님! 결제 후 7일 이내 및 미수강 조건이 확인되어 240,000원 전액 환불 접수가 완료되었습니다..."
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Decision Tree Editor -->
+      <div id="tab-tree" class="tab-content" style="display: none;">
+        <div class="tree-editor-container">
+          <div class="tree-toolbar">
+            <div>
+              <h4 style="font-size: 13px; font-weight: 700;">의사결정 체인 & 부서 구조</h4>
+              <p style="font-size: 11px; color: var(--text-muted);">새 액션을 추가하면 3D 오피스에 신규 AI 직원 데스크가 자동 생성됩니다.</p>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="exportTreeJson()">JSON 내보내기</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="triggerImportTree()">JSON 불러오기</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 11px; color: #f87171;" onclick="resetTreeToDefault()">기본값 복원</button>
+              <input type="file" id="treeFileInput" accept=".json" style="display: none;" onchange="importTreeJson(event)">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="openAddQuestionModal()">+ 새 질문 노드 추가</button>
+            <button class="btn btn-gold" style="font-size: 11px; padding: 6px 12px;" onclick="openAddActionModal()">+ 새 액션(3D 직원 데스크) 추가</button>
+          </div>
+
+          <div id="treeNodesList"></div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Decision Log & Accuracy -->
+      <div id="tab-logs" class="tab-content" style="display: none;">
+        <div class="log-stats-bar">
+          <div>
+            <span style="font-weight: 700; color: #fff;">누적 판정 기록</span>
+            <span style="color: var(--text-muted); font-size: 11px;" id="logCountLabel">(총 0건)</span>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(99, 102, 241, 0.2); border-color: #818cf8; color: #c7d2fe;" onclick="openRlGuideModal()">🧠 강화학습 파이프라인 가이드</button>
+            <button class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7;" onclick="exportDpoDataset()">🎯 DPO 선호도(.jsonl) 추출</button>
+            <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="exportLogsJson()">📥 전체 로그 JSON</button>
+          </div>
+        </div>
+
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>시간</th>
+              <th>발신자 / 제목</th>
+              <th>경로 / 신뢰도</th>
+              <th>최종 액션</th>
+              <th>평가</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 30px;">
+                아직 처리된 의사결정 로그가 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: Department Desk Inspector -->
+  <div id="deskInfoModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="deskModalTitle">🏢 부서 정보</h3>
+        <button class="modal-close-btn" onclick="closeModal('deskInfoModal')">✕</button>
+      </div>
+      <div class="modal-body" id="deskModalBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('deskInfoModal')">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Ollama Connection Guide -->
+  <div id="ollamaGuideModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🔌 로컬 Ollama 0.35+ 연결 설정 가이드</h3>
+        <button class="modal-close-btn" onclick="closeModal('ollamaGuideModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #e5e7eb; margin-bottom: 12px;">
+          본 시스템은 Ollama 0.35+ 신규 기능인 <code>POST /v1/systemone</code> 규격을 완벽하게 준수하여 작동합니다.
+        </p>
+
+        <h4 style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-top: 14px;">1. 모델 다운로드 (터미널)</h4>
+        <div class="cmd-box">
+          <span>ollama pull tev1:0.8b</span>
+          <button class="cmd-copy-btn" onclick="copyText('ollama pull tev1:0.8b')">복사</button>
+        </div>
+
+        <h4 style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-top: 14px;">2. 브라우저 CORS 허용 실행 (중요!)</h4>
+        <p style="font-size: 11px; color: var(--text-muted);">
+          웹 브라우저에서 로컬호스트(localhost:11434)에 직접 보안 요청을 보내려면 반드시 <code>OLLAMA_ORIGINS="*"</code> 환경변수를 설정하고 실행해야 합니다:
+        </p>
+        <div class="cmd-box">
+          <span>OLLAMA_ORIGINS="*" ollama serve</span>
+          <button class="cmd-copy-btn" onclick="copyText('OLLAMA_ORIGINS=&quot;*&quot; ollama serve')">복사</button>
+        </div>
+
+        <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px; margin-top: 14px;">
+          <strong style="color: #fbbf24; font-size: 12px;">💡 현재 Ollama가 0.32 버전이거나 설치되지 않았나요?</strong>
+          <p style="font-size: 11px; color: #d1d5db; margin-top: 4px;">
+            '체험 모드(Demo Mode)'로 전환하시면 실제 API 통신 없이도 100% 동일한 3D 물리 오피스 시뮬레이션을 즉시 체험하실 수 있습니다.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="setMode('demo'); closeModal('ollamaGuideModal');">체험 모드로 전환</button>
+        <button class="btn btn-primary" onclick="setMode('local'); testOllamaConnection();">로컬 연결 확인 및 적용</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Jev API Key Configuration -->
+  <div id="jevApiKeyModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">🔑</span>
+          <h3 style="margin: 0;">Jev API 인증 키 설정</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('jevApiKeyModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 12px; color: #d1d5db; margin-bottom: 14px; line-height: 1.5;">
+          <strong>jev</strong> 모델은 고성능 클라우드/엔터프라이즈 판단용 AI 엔진으로, 호출 시 유효한 <strong>Jev API Key</strong> 인증이 필수입니다.
+        </p>
+
+        <div class="form-group">
+          <label style="font-weight: 700; color: #fbbf24;">Jev API Key</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="password" id="jevApiKeyInput" class="form-control" placeholder="jev-xxxxxxxxxxxxxxxxxxxxxxxx" style="font-family: monospace;">
+            <button class="btn" type="button" onclick="toggleJevKeyVisibility()" id="jevKeyToggleBtn">👁️ 보기</button>
+          </div>
+          <span style="font-size: 10px; color: var(--text-dim); margin-top: 4px; display: block;">
+            * 브라우저 로컬 저장소(localStorage)에 안전하게 보관되며 외부로 노출되지 않습니다.
+          </span>
+        </div>
+
+        <div class="form-group" style="margin-top: 12px;">
+          <label style="font-size: 11px; color: var(--text-muted);">Jev 엔드포인트 URL (선택 사항)</label>
+          <input type="text" id="jevEndpointInput" class="form-control" placeholder="https://api.jev.ai/v1/systemone" value="https://api.jev.ai/v1/systemone" style="font-size: 11px; font-family: monospace;">
+        </div>
+
+        <div style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 10px; margin-top: 14px;">
+          <div style="font-size: 11px; color: #a5b4fc; font-weight: 700;">💡 Jev 모델 판단 프로토콜 안내:</div>
+          <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">
+            <code>Authorization: Bearer [KEY]</code> 헤더로 서명되어 <code>state</code>와 <code>questions</code>을 실시간 전송합니다. API 키가 없거나 테스트 중일 때는 로컬 전용 모델인 <strong>tev1:0.8b (권장)</strong> 또는 체험 모드로 편리하게 전환할 수 있습니다.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="clearJevApiKey()">키 삭제</button>
+        <button class="btn btn-primary" onclick="saveJevApiKey()">API 키 저장 및 적용</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Design Rationale (설계 의도) -->
+  <div id="rationaleModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>💡 AI 에듀테크 1인 기업 의사결정 체인 설계 의도</h3>
+        <button class="modal-close-btn" onclick="closeModal('rationaleModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="color: #a5b4fc; font-size: 14px; margin-bottom: 8px;">1. 비즈니스 모델 & 1인 기업가의 핵심 고충</h4>
+        <p style="font-size: 12px; color: #d1d5db; margin-bottom: 12px;">
+          본 회사는 <strong>YouTube 무료 강의로 수강생을 모으고, 심화 온라인 코스와 유료 멘토링을 판매하는 1인 AI 에듀테크</strong>입니다.
+          대표 혼자서 강의 기획, 영상 제작, 연구를 병행해야 하므로 <strong>매일 쏟아지는 수십 건의 이메일과 댓글을 직접 분류하고 응대하는 것은 물리적으로 불가능</strong>합니다.
+        </p>
+
+        <h4 style="color: #a5b4fc; font-size: 14px; margin-bottom: 8px;">2. 왜 이런 다단계 체인(Chain)으로 설계했는가?</h4>
+        <ul style="font-size: 12px; color: #d1d5db; padding-left: 18px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <li><strong>1단계 <code>category</code> (Choice) 분기:</strong> 결제/환불, 기술오류, 기업제휴, 학습질문 4대 전문 영역으로 격리.</li>
+          <li><strong>2단계 <code>is_refund</code> (Noul Yes/No) 분기:</strong> 70% 임계치로 명시적 환불을 정확히 검출.</li>
+          <li><strong>3단계 <code>refund_urgency</code> (Score) 분기:</strong> 카드 중복 결제 등 위급건은 즉시 승인 취소 & 사과 초안.</li>
+          <li><strong>4단계 <code>deal_scale</code> (Score) 분기:</strong> 대기업 사내특강 등 대형 안건은 대표 직행 상정.</li>
+          <li><strong>신뢰도 부족 시 👑 CEO 직행 (Fail-safe):</strong> 판단 신뢰도 50% 미만은 대표 책상으로 상정되어 응대 사고 100% 방지.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('rationaleModal')">이해했습니다</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Reinforcement Learning Guide (강화학습 가이드) -->
+  <div id="rlGuideModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 760px; max-height: 85vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3>🧠 AI 직원 의사결정 모델 강화학습(RL) 완벽 가이드</h3>
+        <button class="modal-close-btn" onclick="closeModal('rlGuideModal')">✕</button>
+      </div>
+      <div class="modal-body" style="font-size: 13px; line-height: 1.6; color: #d1d5db;">
+        <div style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+          <h4 style="color: #a5b4fc; font-size: 14px; margin-bottom: 6px;">🎯 우리 1인 기업에서의 강화학습(RL) 4대 요소</h4>
+          <ul style="padding-left: 18px; margin: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+            <li><strong>State (상태):</strong> 고객 문의 메일 (제목, 본문, 발신자, 수강 이력 등)</li>
+            <li><strong>Action (행동):</strong> AI가 선택한 질문별 답변 및 최종 전달 부서 (예: 환불팀 배정, 거절, CEO 결재 상정)</li>
+            <li><strong>Reward (보상):</strong> 대표이사(사용자)의 컨펌(👍 +1.0점, 👎 -1.0점), 환불 규정 준수 여부, 소요 시간</li>
+            <li><strong>Policy (정책):</strong> 어떤 고객 메일이 들어왔을 때 가장 정확한 부서로 배정할 확률을 높이는 모델 파라미터</li>
+          </ul>
+        </div>
+
+        <h4 style="color: #38bdf8; font-size: 14px; margin-top: 14px; margin-bottom: 6px;">1. 현업에서 가장 추천하는 방식: DPO (Direct Preference Optimization)</h4>
+        <p style="font-size: 12px; margin-bottom: 10px;">
+          과거 PPO 방식(복잡한 보상 모델 훈련 + 가치 네트워크) 대신, <strong>대표이사의 선호도 쌍 (Chosen vs Rejected)</strong>만으로
+          모델을 직접 수학적으로 최적화하는 기법입니다.
+        </p>
+        <div style="background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 11px; margin-bottom: 14px;">
+          {<br>
+          &nbsp;&nbsp;"prompt": "고객: [환불 문의] 3일 전 결제 강의 수강 취소 요청...",<br>
+          &nbsp;&nbsp;<span style="color: #34d399;">"chosen": "[올바른 판단] 💳 결제/환불팀 (페이봇) 배정 - 규정 준수"</span>,<br>
+          &nbsp;&nbsp;<span style="color: #f87171;">"rejected": "[오판단] 🤝 비즈니스 제휴팀 배정"</span><br>
+          }
+        </div>
+        <p style="font-size: 11px; color: #94a3b8; margin-bottom: 16px;">
+          👉 상단의 <strong>[🎯 DPO 선호도(.jsonl) 추출]</strong> 버튼을 누르면, 웹에서 대표님이 남긴 👍/👎 피드백이 이 형식으로 즉시 다운로드됩니다!
+        </p>
+
+        <h4 style="color: #38bdf8; font-size: 14px; margin-top: 14px; margin-bottom: 6px;">2. 5분 만에 학습하는 Unsloth / TRL 파이썬 코드 예시</h4>
+        <div class="cmd-box" style="flex-direction: column; align-items: stretch; gap: 8px; font-size: 11px; padding: 14px; background: #0f172a;">
+          <pre style="margin: 0; white-space: pre-wrap; color: #e2e8f0; font-family: monospace;">from trl import DPOTrainer, DPOConfig
+from unsloth import FastLanguageModel
+from datasets import load_dataset
+
+# 1. 베이스 모델 로드 (Qwen2.5-3B 또는 Llama-3.2)
+model, tokenizer = FastLanguageModel.from_pretrained("Qwen/Qwen2.5-3B-Instruct", max_seq_length=2048, load_in_4bit=True)
+
+# 2. 웹에서 다운로드한 DPO 데이터셋 로드
+dataset = load_dataset("json", data_files="dpo_preference_dataset.jsonl", split="train")
+
+# 3. DPO 강화학습 실행
+trainer = DPOTrainer(
+    model=model,
+    args=DPOConfig(learning_rate=5e-6, per_device_train_batch_size=2, num_train_epochs=3, output_dir="./trained_ceo_ai"),
+    train_dataset=dataset,
+    tokenizer=tokenizer,
+)
+trainer.train()
+
+# 4. Ollama용 GGUF 파일로 저장
+model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")</pre>
+        </div>
+
+        <h4 style="color: #38bdf8; font-size: 14px; margin-top: 16px; margin-bottom: 6px;">3. 학습된 강화학습 모델을 Ollama에 재배포하기</h4>
+        <p style="font-size: 12px; margin-bottom: 8px;">
+          학습 완료 후 생성된 <code>my_ceo_ai.gguf</code> 파일 경로를 적은 <code>Modelfile</code>을 작성하고 터미널에서 등록합니다:
+        </p>
+        <div class="cmd-box">
+          <span>ollama create nextai-agent -f ./Modelfile</span>
+          <button class="cmd-copy-btn" onclick="copyText('ollama create nextai-agent -f ./Modelfile')">복사</button>
+        </div>
+        <p style="font-size: 11px; color: #94a3b8; margin-top: 6px;">
+          등록 후 본 웹페이지 좌측 상단 드롭다운에서 <strong>'nextai-agent'</strong>를 선택하시면 대표님의 피드백을 학습한 똑똑한 AI 직원으로 즉시 교체됩니다.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('rlGuideModal')">확인했습니다</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Feedback Correction Modal (오판단 부서 재배정 모달) -->
+  <div id="feedbackCorrectionModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 660px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">🔄</span>
+          <div>
+            <h3 style="margin: 0; font-size: 16px;">올바른 담당 부서를 클릭하세요</h3>
+            <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-muted);">
+              AI 직원의 오판단을 바로잡으면 강화학습(DPO) 정답 데이터로 등록됩니다.
+            </p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('feedbackCorrectionModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;">
+          <div style="font-size: 11px; color: #fca5a5; font-weight: 700;">📌 대상 고객 문의:</div>
+          <div id="feedbackTargetSubject" style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 4px;">메일 제목</div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+            AI가 잘못 보낸 부서: <span id="feedbackTargetOldDept" style="color: #f87171; text-decoration: line-through; font-weight: 700;"></span>
+          </div>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 700; color: #e2e8f0; margin-bottom: 10px;">
+          👇 실제 처리해야 할 <span style="color: #38bdf8;">올바른 부서 버튼을 마우스로 클릭</span>하세요:
+        </div>
+
+        <div id="feedbackDeptGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <!-- Dynamically populated clickable department cards -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('feedbackCorrectionModal')">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: New Message Compose -->
+  <div id="newMsgModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>✉️ 새 고객 메시지 수신 및 판단 요청</h3>
+        <button class="modal-close-btn" onclick="closeModal('newMsgModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>발신자 (이메일/이름)</label>
+          <input type="text" id="manualSender" class="form-control" placeholder="example@naver.com (홍길동)" value="user123@gmail.com (수강생 김민우)">
+        </div>
+        <div class="form-group">
+          <label>메일 제목</label>
+          <input type="text" id="manualSubject" class="form-control" placeholder="문의 제목을 입력하세요" value="[환불 문의] 강의 수강 전액 환불 요청드립니다.">
+        </div>
+        <div class="form-group">
+          <label>본문 내용</label>
+          <textarea id="manualBody" class="form-control" placeholder="고객 문의 본문을 입력하세요">결제한 지 2일 지났고 아직 1강도 안 들었습니다. 회사 업무 변경으로 들을 시간이 없어서 전액 환불 희망합니다. 주문번호: 2026-90412</textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('newMsgModal')">취소</button>
+        <button class="btn btn-primary" onclick="submitManualMessage()">공압 튜브로 투하 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Question Node -->
+  <div id="addQuestionModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>+ 새 의사결정 질문(Question) 추가</h3>
+        <button class="modal-close-btn" onclick="closeModal('addQuestionModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>질문 고유 ID (영문)</label>
+          <input type="text" id="newQId" class="form-control" placeholder="예: vip_check">
+        </div>
+        <div class="form-group">
+          <label>질문 한국어 이름 (UI 표시용)</label>
+          <input type="text" id="newQNameKo" class="form-control" placeholder="예: VIP 고객 여부 확인">
+        </div>
+        <div class="form-group">
+          <label>질문 유형 (Type)</label>
+          <select id="newQType" class="form-control">
+            <option value="choice">choice (다중 선택형)</option>
+            <option value="noul">noul (Yes / No 판단형)</option>
+            <option value="score">score (점수/위급도 단계형)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>영문 Instructions (Ollama 모델 지시문)</label>
+          <input type="text" id="newQInst" class="form-control" placeholder="Is this user an existing enterprise subscriber?">
+        </div>
+        <div class="form-group">
+          <label>최소 신뢰도 임계치 (Confidence Threshold, 기본 0.50)</label>
+          <input type="number" id="newQThreshold" class="form-control" min="0.1" max="0.99" step="0.05" value="0.50">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('addQuestionModal')">취소</button>
+        <button class="btn btn-primary" onclick="saveNewQuestion()">질문 생성</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Action Node -->
+  <div id="addActionModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>+ 새 조치 액션 & 3D 직원 데스크 생성</h3>
+        <button class="modal-close-btn" onclick="closeModal('addActionModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>액션 고유 ID (영문)</label>
+          <input type="text" id="newActId" class="form-control" placeholder="예: action_career_consult">
+        </div>
+        <div class="form-group">
+          <label>부서명 & 담당 캐릭터 이름 (한글)</label>
+          <input type="text" id="newActDept" class="form-control" placeholder="예: 🚀 커리어팀 (커리어봇)">
+        </div>
+        <div class="form-group">
+          <label>수행 업무 내용 (Task)</label>
+          <input type="text" id="newActTask" class="form-control" placeholder="예: 이력서 첨삭 가이드 및 1:1 상담 예약 링크 회신">
+        </div>
+        <div class="form-group">
+          <label>캐릭터 테마 색상</label>
+          <select id="newActColor" class="form-control">
+            <option value="#ec4899">핑크 (Pink)</option>
+            <option value="#f97316">오렌지 (Orange)</option>
+            <option value="#8b5cf6">퍼플 (Purple)</option>
+            <option value="#06b6d4">민트 (Mint)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>기본 답변 초안 템플릿</label>
+          <textarea id="newActTemplate" class="form-control" placeholder="고객에게 전송할 회신 초안 템플릿을 입력하세요"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('addActionModal')">취소</button>
+        <button class="btn btn-primary" onclick="saveNewAction()">데스크 & 직원 생성</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: 3D THREE.JS & CANNON.JS & OLLAMA SYSTEM ONE ENGINE -->
+  <script>
+    /* ==========================================================================
+       1. DATA STRUCTURES & DEFAULT EXPERT DECISION CHAIN (100% KOREAN DEPT NAMES)
+       ========================================================================== */
+    const DEFAULT_DECISION_TREE = {
+      rootQuestionId: "category",
+      questions: {
+        "category": {
+          id: "category",
+          nameKo: "1차 문의 부서 분류",
+          type: "choice",
+          instructions: "Classify incoming email into the primary operational department.",
+          criteria: {
+            "billing": "Payments, purchases, receipts, invoices, and refund requests",
+            "technical": "Code bugs, login issues, video playback errors, Colab environment setup",
+            "partnership": "Corporate training workshops, speaker invitations, YouTube sponsorships, and business collaboration",
+            "mentoring": "Course content questions, AI theoretical advice, and career coaching"
+          },
+          threshold: 0.50,
+          routes: {
+            "billing": { type: "question", target: "is_refund" },
+            "technical": { type: "question", target: "issue_type" },
+            "partnership": { type: "question", target: "deal_scale" },
+            "mentoring": { type: "action", target: "action_mentoring" }
+          }
+        },
+        "is_refund": {
+          id: "is_refund",
+          nameKo: "명시적 환불 요청 여부",
+          type: "noul",
+          instructions: "Does the customer explicitly demand or ask for a refund or money back?",
+          threshold: 0.70,
+          routes: {
+            "yes": { type: "question", target: "refund_urgency" },
+            "no": { type: "action", target: "action_billing_receipt" }
+          }
+        },
+        "refund_urgency": {
+          id: "refund_urgency",
+          nameKo: "환불 리스크 및 분쟁 긴급도",
+          type: "score",
+          instructions: "Assess the financial urgency and dispute risk of this refund request.",
+          criteria: [
+            "Routine refund request within standard 7-day policy",
+            "High priority with double billing or card cancellation dispute",
+            "Critical urgent legal complaint or consumer protection report"
+          ],
+          threshold: 0.50,
+          routes: {
+            "0": { type: "action", target: "action_standard_refund" },
+            "1": { type: "action", target: "action_urgent_refund" },
+            "2": { type: "action", target: "action_urgent_refund" }
+          }
+        },
+        "issue_type": {
+          id: "issue_type",
+          nameKo: "기술 장애 유형 식별",
+          type: "choice",
+          instructions: "Identify the specific technical issue reported.",
+          criteria: {
+            "code_bug": "Python, PyTorch, Colab scripts, package dependencies, or lecture code bugs",
+            "platform_access": "Cannot log in, video buffering, LMS portal crash, or account activation issue"
+          },
+          threshold: 0.50,
+          routes: {
+            "code_bug": { type: "action", target: "action_code_debug" },
+            "platform_access": { type: "action", target: "action_platform_support" }
+          }
+        },
+        "deal_scale": {
+          id: "deal_scale",
+          nameKo: "비즈니스 제휴 규모 평가",
+          type: "score",
+          instructions: "Evaluate the strategic budget tier and company scale of this partnership offer.",
+          criteria: [
+            "Small sponsorship or free product gift",
+            "Mid-tier startup collaboration or webinar invitation",
+            "Large enterprise keynote lecture or massive annual sponsorship"
+          ],
+          threshold: 0.50,
+          routes: {
+            "0": { type: "action", target: "action_standard_sponsor" },
+            "1": { type: "action", target: "action_standard_sponsor" },
+            "2": { type: "action", target: "action_ceo_keynote" }
+          }
+        }
+      },
+      actions: {
+        "action_standard_refund": {
+          id: "action_standard_refund",
+          deptName: "💳 결제/환불팀 (페이봇)",
+          employeeName: "페이봇",
+          taskType: "표준 환불 규정 안내 및 회신 초안 작성",
+          avatar: "🤖",
+          color: 0x38bdf8,
+          deskPos: [-8, 0, -3],
+          draftTemplate: "안녕하세요 수강생님, NextAI 결제/환불팀입니다. 결제하신 강의의 전액 환불 접수가 정상 완료되었습니다. 카드사 영업일 기준 3~5일 내에 결제 승인 취소가 반영될 예정입니다."
+        },
+        "action_urgent_refund": {
+          id: "action_urgent_refund",
+          deptName: "🛡 긴급재무리스크팀 (골드봇)",
+          employeeName: "골드봇",
+          taskType: "즉시 승인 취소 연동 및 대표 결재 사과문 초안",
+          avatar: "🚨",
+          color: 0xef4444,
+          deskPos: [-8, 0, 4],
+          draftTemplate: "수강생님 대단히 죄송합니다. 긴급재무리스크팀에서 결제 시스템 상의 중복 승인 오류를 확인하여 즉시 카드사 승인 취소 및 이중 출금액 환급 조치를 완료하였습니다. 대표이사 명의의 정중한 사과와 함께 멤버십 1개월 무료 연장 혜택을 제공해 드립니다."
+        },
+        "action_billing_receipt": {
+          id: "action_billing_receipt",
+          deptName: "🧾 결제지원팀 (페이봇)",
+          employeeName: "페이봇",
+          taskType: "영수증/세금계산서 발행 및 수강증 첨부 회신",
+          avatar: "🧾",
+          color: 0x38bdf8,
+          deskPos: [-8, 0, -3],
+          draftTemplate: "안녕하세요! 결제지원팀입니다. 요청하신 법인 교육비 증빙용 카드 매출전표와 사업자등록증 사본, 그리고 수강확인증 PDF 문서를 메일로 첨부해 드립니다. 세무 증빙 처리에 도움되시길 바랍니다."
+        },
+        "action_code_debug": {
+          id: "action_code_debug",
+          deptName: "🛠 코드디버그팀 (코드봇)",
+          employeeName: "코드봇",
+          taskType: "Colab 코드 재현 및 OOM 회피 가이드 스니펫 제공",
+          avatar: "💻",
+          color: 0x10b981,
+          deskPos: [-2, 0, -3],
+          draftTemplate: "안녕하세요 수강생님! 코드디버그팀 코드봇입니다. Colab T4 무료 GPU 환경에서 OOM이 발생하는 원인은 attention caching 크기 때문입니다. batch_size를 2로 줄이고 gradient_accumulation_steps=4를 추가한 해결 코드 스니펫을 공유해 드립니다."
+        },
+        "action_platform_support": {
+          id: "action_platform_support",
+          deptName: "🖥 시스템운영팀 (서버봇)",
+          employeeName: "서버봇",
+          taskType: "500 에러 캐시 플러시 및 세션 계정 즉시 복구",
+          avatar: "⚙️",
+          color: 0xeab308,
+          deskPos: [-2, 0, 4],
+          draftTemplate: "안녕하세요 수강생님, 시스템운영팀 서버봇입니다. 일시적인 CDN 캐시 동기화 오류로 확인되었습니다. 수강생님의 대시보드 권한을 즉각 재활성화하였으며, 수강 시청 기한을 7일 무료 연장해 드렸습니다."
+        },
+        "action_standard_sponsor": {
+          id: "action_standard_sponsor",
+          deptName: "🤝 기업제휴팀 (파트너봇)",
+          employeeName: "파트너봇",
+          taskType: "유튜브 미드롤 PPL 단가표 및 일정 브로슈어 송부",
+          avatar: "💼",
+          color: 0xa855f7,
+          deskPos: [5, 0, -3],
+          draftTemplate: "안녕하세요 담당자님, 기업제휴팀 파트너봇입니다. NextAI 채널과의 스폰서십 제안에 감사드립니다. 60초 미드롤 협찬 단가표 및 2026년 상반기 콘텐츠 편성 일정을 첨부해 드립니다. 희망하시는 업로드 일정을 회신해 주시면 진행을 도와드리겠습니다."
+        },
+        "action_ceo_keynote": {
+          id: "action_ceo_keynote",
+          deptName: "👑 전략제휴팀 (비즈봇)",
+          employeeName: "비즈봇",
+          taskType: "사내특강 제안 요약 및 CEO 직행 캘린더 미팅 조율",
+          avatar: "🏆",
+          color: 0xfbbf24,
+          deskPos: [5, 0, 4],
+          draftTemplate: "안녕하세요 교육담당자님! 전략제휴팀 비즈봇입니다. 대기업 대상 생성형 AI 특강 출강 제안에 깊이 감사드립니다. 요청하신 커리큘럼(4시간)과 강사료 견적서를 조율하기 위해 대표님과 직접 줌(Zoom) 미팅을 예약하실 수 있는 캘린더 링크를 안내해 드립니다."
+        },
+        "action_mentoring": {
+          id: "action_mentoring",
+          deptName: "🎓 학습멘토링팀 (튜터봇)",
+          employeeName: "튜터봇",
+          taskType: "이론 수식 해설 및 논문/진로 참고자료 링크 회신",
+          avatar: "📚",
+          color: 0x06b6d4,
+          deskPos: [9, 0, 0.5],
+          draftTemplate: "안녕하세요 수강생님! 학습멘토링팀 튜터봇입니다. Attention 수식에서 d_k의 제곱근으로 나누는 이유는 내적 값이 너무 커지면 softmax 함수의 기울기가 0으로 수렴(vanishing)하는 것을 방지하기 위함입니다. 상세 유도 과정을 정리한 블로그 링크를 함께 드립니다."
+        }
+      }
+    };
+
+    // Korean Labels Mapping for Question Choice & Score Options
+    const KOREAN_OPTION_LABELS = {
+      // category
+      "billing": "💳 결제 및 환불 문의 (Billing)",
+      "technical": "🛠 기술 오류 및 시스템 장애 (Technical)",
+      "partnership": "🤝 비즈니스 제휴 및 스폰서십 (Partnership)",
+      "mentoring": "🎓 강의 질문 및 학습 멘토링 (Mentoring)",
+      
+      // is_refund
+      "yes": "⭕️ 예 - 명시적 환불 요구 (YES)",
+      "no": "❌ 아니오 - 단순 결제/영수증 문의 (NO)",
+      
+      // refund_urgency
+      "0": "표준 정례 환불 (7일 이내 규정 접수)",
+      "1": "고위험 결제 오류 (카드 중복 청구 등)",
+      "2": "긴급 법적/분쟁 리스크 (소비자원 신고 경고)",
+      
+      // issue_type
+      "code_bug": "💻 Colab/파이썬 실습 코드 에러",
+      "platform_access": "🖥 수강 대시보드 로그인/서버 접속 장애",
+      
+      // deal_scale
+      "Small": "소형 협찬 / 단순 선물",
+      "Mid": "스타트업 제휴 / 웨비나 초대",
+      "Large": "대기업 사내특강 / 연간 대형 스폰서"
+    };
+
+    const EXAMPLE_MESSAGES = [
+      {
+        sender: "user_kim@naver.com (김도현)",
+        subject: "[환불 문의] 파이썬 실전 강의 전액 환불 요청드립니다",
+        body: "안녕하세요 대표님, 어제 결제한 '실전 LLM 에이전트 구축 부트캠프' 강의인데요. 강의 목차를 다시 살펴보니 제가 원하던 분야와 조금 달라서 아직 1강도 수강하지 않은 상태입니다. 결제 금액 240,000원 전액 환불 가능할까요? 결제번호는 2026-99381-KR 입니다."
+      },
+      {
+        sender: "park_angry@daum.net (박지민)",
+        subject: "[긴급/화남] 카드 결제 2번 중복 청구됐습니다!! 즉시 조치 요망",
+        body: "지금 카드 승인 내역 확인했는데 월간 멤버십 비용(49,000원)이 1분 간격으로 두 번이나 결제되었습니다! 이게 무슨 일인가요? 오늘 중으로 즉시 승인 취소 안 해주시면 카드사에 분쟁 조정 신청하고 소비자원에도 신고 접수하겠습니다. 빠른 회신 바랍니다."
+      },
+      {
+        sender: "sujin_lee@hyundai.com (이수진)",
+        subject: "[영수증/세금계산서] 회사 제출용 결제 영수증 발행 요청의 건",
+        body: "대표님 안녕하세요, 회사 자기계발 지원금으로 강의를 수강 중인 수강생 이수진입니다. 회사 회계팀에 제출할 카드 매출전표와 사업자등록증 사본, 그리고 수강확인서 양식이 필요한데 메일로 송부해주실 수 있을까요? 사업자번호: 120-88-99123"
+      },
+      {
+        sender: "coder_won@gmail.com (최원석)",
+        subject: "[코드 질문] 4장 Colab 실습 중 CUDA Out of Memory 에러 발생",
+        body: "강의 4강 파인튜닝 실습 중 Colab 무료 T4 GPU에서 배치 사이즈를 4로 설정했는데도 계속 CUDA out of memory 에러가 발생하면서 커널이 죽습니다. gradient accumulation steps를 적용해야 할까요? 제가 수정한 스크립트 코드 첨부드립니다."
+      },
+      {
+        sender: "hyeonwoo@kakao.com (정현우)",
+        subject: "[접속 장애] 로그인 후 대시보드 화면이 흰색으로만 나옵니다 (500 Error)",
+        body: "크롬 브라우저에서 로그인 버튼을 누르면 '서버 내부 오류(500)'가 뜨면서 수강 대시보드로 이동하지 않습니다. 시크릿 모드에서도 동일한 증상이 반복됩니다. 오늘 강의 수강 마감일인데 확인 부탁드립니다."
+      },
+      {
+        sender: "taeyang.han@mobis.co.kr (한태양 책임)",
+        subject: "[특강 의뢰] 임직원 대상 생성형 AI 활용 오프라인 특강 출강 제안",
+        body: "안녕하세요 대표님, 현대모비스 R&D 인재개발팀 한태양 책임입니다. 유튜브에서 올려주신 엔터프라이즈 AI 에이전트 실전 강의를 감명 깊게 보았습니다. 4월 중 사내 AI 연구원 및 기획자 80명을 대상으로 4시간 분량의 특강을 모시고자 합니다. 강사료 견적 및 출강 가능 일정을 문의드립니다."
+      },
+      {
+        sender: "biz@promptworks.ai (마케팅팀)",
+        subject: "[협찬/광고] 유튜브 채널 영상 내 60초 광고 스폰서십 제안서",
+        body: "대표님 안녕하세요! AI 코딩 어시스턴트 서비스 '코파일럿X'의 마케팅 담당자입니다. 대표님 유튜브 채널의 개발자 구독자층과 당사 타겟이 정확히 일치하여, 5월 업로드 예정 영상에 60초 미드롤 협찬을 진행하고 싶습니다. PPL 광고 단가표와 진행 프로세스 회신 부탁드립니다."
+      },
+      {
+        sender: "minkyeong@snu.ac.kr (송민경)",
+        subject: "[질문/진로] 트랜스포머 Attention 차원 수식 관련 질문 및 대학원 진로 고민",
+        body: "강의 2장 Self-Attention 수식에서 Q와 K의 전치 행렬 곱 연산 시 d_k로 나누어주는 스케일링 팩터의 수학적 증명에 대해 질문이 있습니다. softmax 입력이 커지면 gradient vanishing이 일어나는 것까지는 이해했는데... 그리고 비전공자로서 AI 연구실 대학원 진학을 준비할 때 필수적인 선수 과목도 조언을 얻고 싶습니다."
+      },
+      {
+        sender: "confused_user@hanmail.net (의문자)",
+        subject: "강의가 이상한데 환불을 해주시든가 아니면 저랑 동업해서 강좌 다시 찍으실래요?",
+        body: "강의 샀는데 내용이 너무 빨라서 반은 알아듣고 반은 모르겠네요. 이거 환불 가능한가요? 아님 제가 학원 강사 출신인데 저랑 같이 파트너십 맺고 초보자용 강의 새로 런칭하실 생각 있으신가요? 연락 주세요."
+      },
+      {
+        sender: "fan_boy99@naver.com (애청자)",
+        subject: "유튜브 잘 보고 있습니다 ㅎㅎ 질문 하나만 드려도 될까요?",
+        body: "안녕하세요 대표님 영상 매일 챙겨보고 있는 애청자입니다! 그냥 너무 감사해서 인사 남겨요. 혹시 영상에서 사용하시는 기계식 키보드랑 모니터 제품명이 뭔가요? 영상에서 타건 소리가 너무 좋아서요 ㅎㅎ"
+      }
+    ];
+
+    /* ==========================================================================
+       2. STATE & CONFIGURATION
+       ========================================================================== */
+    let currentTree = loadDecisionTree();
+    let currentMode = localStorage.getItem("jev_engine_mode") || "local";
+    let isSoundEnabled = localStorage.getItem("jev_sound_enabled") !== "false";
+    let simSpeedMultiplier = parseFloat(localStorage.getItem("jev_sim_speed")) || 1;
+    let isAutoRunActive = false;
+    let autoRunTimer = null;
+    let pendingCeoReview = null;
+
+    let stats = {
+      tasksHandled: 0,
+      totalDecisionMs: 0,
+      accuracyEvaluations: [],
+      logs: []
+    };
+
+    try {
+      const savedLogs = localStorage.getItem("my_ai_company_logs");
+      if (savedLogs) stats.logs = JSON.parse(savedLogs);
+      stats.tasksHandled = stats.logs.length;
+    } catch (e) {}
+
+    /* ==========================================================================
+       3. RETRO AUDIO SYNTHESIS
+       ========================================================================== */
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSound(type) {
+      if (!isSoundEnabled) return;
+      try {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+
+        if (type === 'mail') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(587.33, now);
+          osc.frequency.setValueAtTime(880, now + 0.08);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'tick') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(440, now);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'ceo_alert') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.setValueAtTime(480, now + 0.1);
+          osc.frequency.setValueAtTime(360, now + 0.22);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          osc.start(now);
+          osc.stop(now + 0.45);
+        } else if (type === 'sparkle') {
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(freq, now + i * 0.06);
+            gain.gain.setValueAtTime(0.1, now + i * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.22);
+            osc.start(now + i * 0.06);
+            osc.stop(now + i * 0.06 + 0.22);
+          });
+        } else if (type === 'thud') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        }
+      } catch (err) {}
+    }
+
+    function toggleSound() {
+      isSoundEnabled = !isSoundEnabled;
+      localStorage.setItem("jev_sound_enabled", isSoundEnabled ? "true" : "false");
+      updateSoundButtonUI();
+    }
+
+    function updateSoundButtonUI() {
+      const btn = document.getElementById("soundToggleBtn");
+      if (!btn) return;
+      btn.innerText = isSoundEnabled ? "🔊 사운드 ON" : "🔇 음소거";
+      btn.style.color = isSoundEnabled ? "#fff" : "var(--text-dim)";
+    }
+
+    /* ==========================================================================
+       4. 3D THREE.JS SCENE & CANNON.JS PHYSICS ENGINE SETUP
+       ========================================================================== */
+    const container = document.getElementById("threeCanvasContainer");
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0d14);
+
+    const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(18, 17, 20);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.5));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    controls.minDistance = 8;
+    controls.maxDistance = 45;
+    controls.target.set(0, 1.2, 0);
+
+    // Cannon Physics World
+    const physicsWorld = new CANNON.World();
+    physicsWorld.gravity.set(0, -18, 0);
+    physicsWorld.broadphase = new CANNON.NaiveBroadphase();
+    physicsWorld.solver.iterations = 10;
+
+    const groundPhysMat = new CANNON.Material("ground");
+    const mailPhysMat = new CANNON.Material("mail");
+    const toyPhysMat = new CANNON.Material("toy");
+
+    physicsWorld.addContactMaterial(new CANNON.ContactMaterial(groundPhysMat, mailPhysMat, { friction: 0.35, restitution: 0.55 }));
+    physicsWorld.addContactMaterial(new CANNON.ContactMaterial(groundPhysMat, toyPhysMat, { friction: 0.3, restitution: 0.7 }));
+
+    const groundBody = new CANNON.Body({ mass: 0, shape: new CANNON.Plane(), material: groundPhysMat });
+    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+    physicsWorld.addBody(groundBody);
+
+    const physicsSyncPairs = [];
+    const deskMeshMap = {};
+    const charactersList = [];
+
+    // Active Character / Desk Highlight Beam & Beacon
+    let activeHighlightGroup = null;
+    let highlightBeamMesh = null;
+    let highlightRingMesh = null;
+    let highlightSpotLight = null;
+
+    /* ==========================================================================
+       5. 3D PROCEDURAL ASSETS & KOREAN LABELED OFFICE ARCHITECTURE
+       ========================================================================== */
+    function init3DOfficeEnvironment() {
+      const ambLight = new THREE.AmbientLight(0x8da2c0, 0.75);
+      scene.add(ambLight);
+
+      const dirLight = new THREE.DirectionalLight(0xfff7ea, 1.2);
+      dirLight.position.set(16, 26, 12);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 2048;
+      dirLight.shadow.mapSize.height = 2048;
+      dirLight.shadow.camera.near = 0.5;
+      dirLight.shadow.camera.far = 60;
+      const d = 16;
+      dirLight.shadow.camera.left = -d;
+      dirLight.shadow.camera.right = d;
+      dirLight.shadow.camera.top = d;
+      dirLight.shadow.camera.bottom = -d;
+      dirLight.shadow.bias = -0.0005;
+      scene.add(dirLight);
+
+      // Floor & Carpet
+      const floorGeo = new THREE.BoxGeometry(26, 0.4, 20);
+      const floorMat = new THREE.MeshStandardMaterial({ color: 0x221a14, roughness: 0.6, metalness: 0.05 });
+      const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+      floorMesh.position.y = -0.2;
+      floorMesh.receiveShadow = true;
+      scene.add(floorMesh);
+
+      const trimGeo = new THREE.BoxGeometry(26.6, 0.3, 20.6);
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0x110c08, roughness: 0.8 });
+      const trimMesh = new THREE.Mesh(trimGeo, trimMat);
+      trimMesh.position.y = -0.4;
+      scene.add(trimMesh);
+
+      // CEO Blue Carpet
+      const carpetGeo = new THREE.BoxGeometry(9, 0.02, 6.5);
+      const carpetMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9, metalness: 0.1 });
+      const carpetMesh = new THREE.Mesh(carpetGeo, carpetMat);
+      carpetMesh.position.set(0, 0.01, -6.8);
+      carpetMesh.receiveShadow = true;
+      scene.add(carpetMesh);
+
+      const borderGeo = new THREE.BoxGeometry(9.3, 0.015, 6.8);
+      const borderMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.3, metalness: 0.8 });
+      const borderMesh = new THREE.Mesh(borderGeo, borderMat);
+      borderMesh.position.set(0, 0.005, -6.8);
+      scene.add(borderMesh);
+
+      // Back Walls
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0x131926, roughness: 0.8 });
+      const backWall = new THREE.Mesh(new THREE.BoxGeometry(26, 9, 0.5), wallMat);
+      backWall.position.set(0, 4.3, -10.2);
+      backWall.receiveShadow = true;
+      scene.add(backWall);
+
+      const sideWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, 9, 20), wallMat);
+      sideWall.position.set(-13.2, 4.3, 0);
+      sideWall.receiveShadow = true;
+      scene.add(sideWall);
+
+      // Wall Neon Sign "NEXT AI 1인 기업 HQ"
+      const neonGroup = new THREE.Group();
+      const neonPlate = new THREE.Mesh(
+        new THREE.BoxGeometry(9, 1.3, 0.1),
+        new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.4 })
+      );
+      const neonText = new THREE.Mesh(new THREE.BoxGeometry(8.2, 0.6, 0.12), new THREE.MeshBasicMaterial({ color: 0x818cf8 }));
+      neonGroup.add(neonPlate);
+      neonGroup.add(neonText);
+      neonGroup.position.set(0, 7.5, -9.9);
+      scene.add(neonGroup);
+
+      // Server Rack & Chute & Pedestals
+      createServerRack(10.5, 0, -8.5);
+      createPneumaticChute(-11, 0, 4);
+      createInspectionPedestal(-5, 0, 0.5, "1차 분류 관문", 0x6366f1);
+      createInspectionPedestal(2, 0, 0.5, "2차 정밀 분석대", 0x38bdf8);
+
+      // Desks
+      createCeoDesk();
+      createEmployeeDesks();
+
+      // Setup Target Highlight Light Beam
+      setupActiveHighlightBeam();
+    }
+
+    function setupActiveHighlightBeam() {
+      activeHighlightGroup = new THREE.Group();
+      activeHighlightGroup.visible = false;
+
+      // Vertical Light Cylinder
+      const beamGeo = new THREE.CylinderGeometry(1.6, 1.8, 8, 32, 1, true);
+      const beamMat = new THREE.MeshBasicMaterial({
+        color: 0x10b981,
+        transparent: true,
+        opacity: 0.35,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
+      });
+      highlightBeamMesh = new THREE.Mesh(beamGeo, beamMat);
+      highlightBeamMesh.position.y = 4.0;
+      activeHighlightGroup.add(highlightBeamMesh);
+
+      // Rotating Floor Target Ring
+      const ringGeo = new THREE.RingGeometry(1.6, 1.9, 32);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x10b981,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.8
+      });
+      highlightRingMesh = new THREE.Mesh(ringGeo, ringMat);
+      highlightRingMesh.rotation.x = Math.PI / 2;
+      highlightRingMesh.position.y = 0.05;
+      activeHighlightGroup.add(highlightRingMesh);
+
+      // Overhead Spotlight
+      highlightSpotLight = new THREE.SpotLight(0x10b981, 2.5, 18, Math.PI / 4, 0.3);
+      highlightSpotLight.position.set(0, 9, 0);
+      activeHighlightGroup.add(highlightSpotLight);
+      activeHighlightGroup.add(highlightSpotLight.target);
+
+      scene.add(activeHighlightGroup);
+    }
+
+    function setTargetDeskHighlight(action, isCeo = false) {
+      if (!activeHighlightGroup) return;
+      activeHighlightGroup.visible = true;
+
+      const pos = isCeo ? [0, 0, -6.8] : (action.deskPos || [0, 0, 0]);
+      activeHighlightGroup.position.set(pos[0], 0, pos[2]);
+
+      const color = isCeo ? 0xfbbf24 : (action.color || 0x10b981);
+      highlightBeamMesh.material.color.setHex(color);
+      highlightRingMesh.material.color.setHex(color);
+      highlightSpotLight.color.setHex(color);
+
+      // Show Banner in UI
+      const banner = document.getElementById("targetDeptBanner");
+      const nameLabel = document.getElementById("targetDeptNameLabel");
+      const statusLabel = document.getElementById("targetDeptStatusLabel");
+
+      if (banner && nameLabel) {
+        banner.style.display = "flex";
+        nameLabel.innerText = isCeo ? "👑 대표이사 집무실 (CEO)" : action.deptName;
+        statusLabel.innerText = isCeo ? "신뢰도 부족 안건 대표 결재 대기 중... ⚠️" : "메시지 수신 & 답변 초안 작성 중... ✨";
+      }
+
+      // Trigger Character Excitement
+      const char = charactersList.find(c => isCeo ? c.isCeo : Math.abs(c.group.position.x - pos[0]) < 1.0);
+      if (char) {
+        char.isTyping = true;
+        char.isJumping = true;
+        char.jumpTimer = 35;
+      }
+    }
+
+    function clearTargetDeskHighlight() {
+      if (activeHighlightGroup) activeHighlightGroup.visible = false;
+      const banner = document.getElementById("targetDeptBanner");
+      if (banner) banner.style.display = "none";
+    }
+
+    function createServerRack(x, y, z) {
+      const rack = new THREE.Group();
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(2.2, 6.5, 1.8),
+        new THREE.MeshStandardMaterial({ color: 0x1e2430, metalness: 0.6, roughness: 0.3 })
+      );
+      body.position.y = 3.25;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      rack.add(body);
+
+      for (let i = 0; i < 5; i++) {
+        const slot = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.8, 0.1), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+        slot.position.set(0, 1.2 + i * 1.0, 0.9);
+        rack.add(slot);
+
+        const led1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.12), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        led1.position.set(-0.6, 1.2 + i * 1.0, 0.95);
+        rack.add(led1);
+
+        const led2 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.12), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+        led2.position.set(-0.3, 1.2 + i * 1.0, 0.95);
+        rack.add(led2);
+      }
+      rack.position.set(x, y, z);
+      scene.add(rack);
+    }
+
+    function createPneumaticChute(x, y, z) {
+      const chute = new THREE.Group();
+      const tubeMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.15 });
+
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 5, 24), tubeMat);
+      tube.position.set(0, 6.5, 0);
+      chute.add(tube);
+
+      const funnel = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.9, 0.8, 24), tubeMat);
+      funnel.position.set(0, 4.2, 0);
+      chute.add(funnel);
+
+      const tray = new THREE.Mesh(
+        new THREE.BoxGeometry(2.5, 1.0, 2.5),
+        new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.5 })
+      );
+      tray.position.set(0, 0.5, 0);
+      tray.castShadow = true;
+      tray.receiveShadow = true;
+      chute.add(tray);
+
+      const sign = createFloatingNameplateBadge("📬 공압 우편 투입구", "메시지 도착지점", 0x38bdf8);
+      sign.position.set(0, 2.2, 0);
+      chute.add(sign);
+
+      chute.position.set(x, y, z);
+      scene.add(chute);
+    }
+
+    function createInspectionPedestal(x, y, z, label, ringColor) {
+      const group = new THREE.Group();
+
+      const ringGeo = new THREE.RingGeometry(1.2, 1.4, 32);
+      const ringMat = new THREE.MeshBasicMaterial({ color: ringColor, side: THREE.DoubleSide });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 0.02;
+      group.add(ring);
+
+      const cylGeo = new THREE.CylinderGeometry(1.2, 1.2, 1.8, 24, 1, true);
+      const cylMat = new THREE.MeshBasicMaterial({ color: ringColor, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+      const beam = new THREE.Mesh(cylGeo, cylMat);
+      beam.position.y = 0.9;
+      group.add(beam);
+
+      const sign = createFloatingNameplateBadge(`🔬 ${label}`, "판단 체인 검증소", ringColor);
+      sign.position.set(0, 2.2, 0);
+      group.add(sign);
+
+      group.position.set(x, y, z);
+      scene.add(group);
+    }
+
+    function createCeoDesk() {
+      const ceoGroup = new THREE.Group();
+      ceoGroup.userData = { id: "ceo", name: "대표이사 집무실 (CEO)" };
+
+      const deskTop = new THREE.Mesh(
+        new THREE.BoxGeometry(4.2, 0.25, 2.2),
+        new THREE.MeshStandardMaterial({ color: 0x3d1c0e, roughness: 0.25, metalness: 0.15 })
+      );
+      deskTop.position.set(0, 1.2, -6.8);
+      deskTop.castShadow = true;
+      deskTop.receiveShadow = true;
+      ceoGroup.add(deskTop);
+
+      const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.2, 16);
+      const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.2 });
+      [-1.8, 1.8].forEach(lx => {
+        [-0.8, 0.8].forEach(lz => {
+          const leg = new THREE.Mesh(legGeo, goldMat);
+          leg.position.set(lx, 0.6, -6.8 + lz);
+          leg.castShadow = true;
+          ceoGroup.add(leg);
+        });
+      });
+
+      // Gold Laptop
+      const laptopBase = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.04, 0.5), goldMat);
+      laptopBase.position.set(0, 1.34, -6.7);
+      const laptopScreen = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.03), new THREE.MeshBasicMaterial({ color: 0x60a5fa }));
+      laptopScreen.position.set(0, 1.6, -6.95);
+      laptopScreen.rotation.x = -0.15;
+      ceoGroup.add(laptopBase);
+      ceoGroup.add(laptopScreen);
+
+      // Gold Trophy
+      const trophyBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.25, 16), goldMat);
+      const trophyCup = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.35, 16), goldMat);
+      trophyBase.position.set(1.4, 1.42, -6.6);
+      trophyCup.position.set(1.4, 1.65, -6.6);
+      trophyCup.rotation.x = Math.PI;
+      ceoGroup.add(trophyBase);
+      ceoGroup.add(trophyCup);
+
+      // Chair
+      const chairGroup = new THREE.Group();
+      const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 1.1), new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.5 }));
+      chairSeat.position.set(0, 0.9, -8.0);
+      const chairBack = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 0.2), new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.5 }));
+      chairBack.position.set(0, 1.6, -8.5);
+      chairGroup.add(chairSeat);
+      chairGroup.add(chairBack);
+      ceoGroup.add(chairGroup);
+
+      // 3D CEO Figurine
+      const ceoChar = create3DCharacter({
+        color: 0x1e3a8a,
+        hasCrown: true,
+        isCeo: true,
+        x: 0,
+        y: 1.1,
+        z: -8.0
+      });
+      ceoGroup.add(ceoChar.group);
+      charactersList.push(ceoChar);
+
+      // 2-Line Korean Floating Nameplate Badge
+      const titleBadge = createFloatingNameplateBadge("👑 대표이사 집무실", "최종 결정권자 (나)", 0xfbbf24);
+      titleBadge.position.set(0, 3.4, -6.8);
+      ceoGroup.add(titleBadge);
+
+      scene.add(ceoGroup);
+      deskMeshMap["ceo"] = ceoGroup;
+
+      const deskPhysBody = new CANNON.Body({
+        mass: 0,
+        shape: new CANNON.Box(new CANNON.Vec3(2.1, 0.6, 1.1)),
+        position: new CANNON.Vec3(0, 0.6, -6.8)
+      });
+      physicsWorld.addBody(deskPhysBody);
+    }
+
+    function createEmployeeDesks() {
+      for (const [actionId, action] of Object.entries(currentTree.actions)) {
+        createSingleEmployeeDesk(action);
+      }
+    }
+
+    function createSingleEmployeeDesk(action) {
+      if (deskMeshMap[action.id]) return;
+
+      const [dx, dy, dz] = action.deskPos || [0, 0, 0];
+      const group = new THREE.Group();
+      group.userData = { id: action.id, action: action };
+
+      const tableTop = new THREE.Mesh(
+        new THREE.BoxGeometry(2.8, 0.18, 1.6),
+        new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.4 })
+      );
+      tableTop.position.set(dx, 0.9, dz);
+      tableTop.castShadow = true;
+      tableTop.receiveShadow = true;
+      group.add(tableTop);
+
+      const legGeo = new THREE.BoxGeometry(0.08, 0.9, 0.08);
+      const legMat = new THREE.MeshStandardMaterial({ color: 0x52525b });
+      [-1.2, 1.2].forEach(lx => {
+        [-0.6, 0.6].forEach(lz => {
+          const leg = new THREE.Mesh(legGeo, legMat);
+          leg.position.set(dx + lx, 0.45, dz + lz);
+          leg.castShadow = true;
+          group.add(leg);
+        });
+      });
+
+      // Monitor
+      const monitorGroup = new THREE.Group();
+      const stand = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.4, 0.2), legMat);
+      stand.position.set(dx, 1.1, dz - 0.4);
+      const screenFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.8, 0.06), new THREE.MeshStandardMaterial({ color: 0x090d16 }));
+      screenFrame.position.set(dx, 1.5, dz - 0.4);
+      const screenGlow = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.7, 0.02), new THREE.MeshBasicMaterial({ color: action.color || 0x38bdf8 }));
+      screenGlow.position.set(dx, 1.5, dz - 0.36);
+      monitorGroup.add(stand);
+      monitorGroup.add(screenFrame);
+      monitorGroup.add(screenGlow);
+      group.add(monitorGroup);
+
+      // Keyboard
+      const kb = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.03, 0.25), new THREE.MeshStandardMaterial({ color: 0x18181b }));
+      kb.position.set(dx, 1.0, dz + 0.1);
+      group.add(kb);
+
+      // Character Figurine
+      const char = create3DCharacter({
+        color: action.color || 0x6366f1,
+        hasCrown: false,
+        isCeo: false,
+        x: dx,
+        y: 0.85,
+        z: dz + 0.9
+      });
+      group.add(char.group);
+      charactersList.push(char);
+
+      // 2-Line Korean Nameplate Badge: Line 1 = Dept Name, Line 2 = Assigned AI
+      const badge = createFloatingNameplateBadge(action.deptName, `담당 AI: ${action.employeeName}`, action.color);
+      badge.position.set(dx, 2.9, dz);
+      group.add(badge);
+
+      scene.add(group);
+      deskMeshMap[action.id] = group;
+
+      const deskBody = new CANNON.Body({
+        mass: 0,
+        shape: new CANNON.Box(new CANNON.Vec3(1.4, 0.45, 0.8)),
+        position: new CANNON.Vec3(dx, 0.45, dz)
+      });
+      physicsWorld.addBody(deskBody);
+    }
+
+    function create3DCharacter(opts) {
+      const group = new THREE.Group();
+
+      const bodyGeo = new THREE.CylinderGeometry(0.3, 0.4, 0.8, 16);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: opts.color, roughness: 0.35, metalness: 0.1 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 0.4;
+      body.castShadow = true;
+      group.add(body);
+
+      const headGeo = new THREE.SphereGeometry(0.35, 20, 20);
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.4 });
+      const head = new THREE.Mesh(headGeo, skinMat);
+      head.position.y = 1.05;
+      head.castShadow = true;
+      group.add(head);
+
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+      const eye1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.05), eyeMat);
+      eye1.position.set(-0.12, 1.08, 0.32);
+      const eye2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.05), eyeMat);
+      eye2.position.set(0.12, 1.08, 0.32);
+      group.add(eye1);
+      group.add(eye2);
+
+      if (opts.hasCrown) {
+        const crownGeo = new THREE.CylinderGeometry(0.25, 0.2, 0.25, 6);
+        const crownMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.15 });
+        const crown = new THREE.Mesh(crownGeo, crownMat);
+        crown.position.y = 1.45;
+        group.add(crown);
+      }
+
+      const handGeo = new THREE.SphereGeometry(0.09, 12, 12);
+      const handL = new THREE.Mesh(handGeo, skinMat);
+      handL.position.set(-0.25, 0.35, 0.4);
+      const handR = new THREE.Mesh(handGeo, skinMat);
+      handR.position.set(0.25, 0.35, 0.4);
+      group.add(handL);
+      group.add(handR);
+
+      group.position.set(opts.x, opts.y, opts.z);
+
+      return {
+        group: group,
+        head: head,
+        handL: handL,
+        handR: handR,
+        initialY: opts.y,
+        isCeo: opts.isCeo,
+        isTyping: false,
+        isJumping: false,
+        jumpTimer: 0
+      };
+    }
+
+    // High-Resolution 2-Line Korean 3D Nameplate Badge
+    function createFloatingNameplateBadge(line1Text, line2Text, colorHex) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 160;
+      const c = canvas.getContext("2d");
+
+      // Dark glass container
+      c.fillStyle = "rgba(10, 15, 26, 0.94)";
+      c.roundRect(8, 8, 496, 144, 20);
+      c.fill();
+
+      // Glowing color border
+      const strokeColor = typeof colorHex === 'number' ? `#${colorHex.toString(16).padStart(6, '0')}` : colorHex;
+      c.strokeStyle = strokeColor;
+      c.lineWidth = 6;
+      c.stroke();
+
+      // Line 1: Department Name
+      c.font = "bold 32px 'Pretendard', sans-serif";
+      c.fillStyle = "#ffffff";
+      c.textAlign = "center";
+      c.textBaseline = "middle";
+      c.fillText(line1Text, 256, 54);
+
+      // Line 2: Assigned Role / Person
+      c.font = "600 24px 'Pretendard', sans-serif";
+      c.fillStyle = strokeColor;
+      c.fillText(line2Text, 256, 106);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(3.4, 1.05, 1);
+      return sprite;
+    }
+
+    /* ==========================================================================
+       6. PHYSICAL MAIL TRANSIT & INTERACTIVE 3D TOYBOX
+       ========================================================================== */
+    let activeMailParcel = null;
+    let currentMessageSessionId = 0;
+
+    function spawnPhysicalMail(msg) {
+      if (activeMailParcel) {
+        // 이전 우편이 남아있거나 처리 중일 때, 팝업 차단 대신 이전 우편을 즉시 정리하고 새 우편을 처리
+        cleanupActiveMail();
+        clearTargetDeskHighlight();
+        if (pendingCeoReview) {
+          const ceoAlertBar = document.getElementById("ceoAlertBar");
+          if (ceoAlertBar) ceoAlertBar.style.display = "none";
+          const inspCeoCard = document.getElementById("inspectorCeoDecisionCard");
+          if (inspCeoCard) inspCeoCard.remove();
+          pendingCeoReview = null;
+          document.getElementById("kpiCeoPending").innerText = "0건";
+          document.getElementById("kpiCeoCard").style.animation = "none";
+        }
+      }
+
+      playSound("mail");
+
+      const mailGeo = new THREE.BoxGeometry(0.7, 0.22, 0.5);
+      const mailMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.4, metalness: 0.05 });
+      const mailMesh = new THREE.Mesh(mailGeo, mailMat);
+      mailMesh.castShadow = true;
+
+      const seal = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.1, 0.04, 16),
+        new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 })
+      );
+      seal.position.y = 0.12;
+      mailMesh.add(seal);
+
+      mailMesh.position.set(-11, 4.2, 4);
+      scene.add(mailMesh);
+
+      const mailBody = new CANNON.Body({
+        mass: 1.5,
+        shape: new CANNON.Box(new CANNON.Vec3(0.35, 0.11, 0.25)),
+        material: mailPhysMat,
+        position: new CANNON.Vec3(-11, 4.2, 4)
+      });
+      mailBody.velocity.set(0.5, -2, -0.5);
+      physicsWorld.addBody(mailBody);
+
+      physicsSyncPairs.push({ mesh: mailMesh, body: mailBody });
+
+      activeMailParcel = { mesh: mailMesh, body: mailBody, msg: msg };
+
+      mailBody.addEventListener("collide", () => {
+        playSound("thud");
+      });
+
+      return activeMailParcel;
+    }
+
+    function spawnPhysicsToyCubes() {
+      for (let i = 0; i < 12; i++) {
+        const size = 0.35 + Math.random() * 0.2;
+        const color = [0xf43f5e, 0x3b82f6, 0x10b981, 0xfbbf24, 0xa855f7][i % 5];
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), new THREE.MeshStandardMaterial({ color, roughness: 0.4 }));
+        mesh.castShadow = true;
+        mesh.position.set(-8 + Math.random() * 16, 7 + Math.random() * 3, -4 + Math.random() * 8);
+        scene.add(mesh);
+
+        const body = new CANNON.Body({
+          mass: 0.8,
+          shape: new CANNON.Box(new CANNON.Vec3(size / 2, size / 2, size / 2)),
+          material: toyPhysMat,
+          position: new CANNON.Vec3(mesh.position.x, mesh.position.y, mesh.position.z)
+        });
+        body.velocity.set((Math.random() - 0.5) * 3, -1, (Math.random() - 0.5) * 3);
+        physicsWorld.addBody(body);
+
+        physicsSyncPairs.push({ mesh, body });
+      }
+      playSound("sparkle");
+    }
+
+    function firePhysicalConfetti(x, y, z) {
+      for (let i = 0; i < 30; i++) {
+        const size = 0.14;
+        const color = [0xfbbf24, 0x38bdf8, 0x34d399, 0xf472b6, 0xffffff][i % 5];
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), new THREE.MeshBasicMaterial({ color }));
+        mesh.position.set(x, y + 1.2, z);
+        scene.add(mesh);
+
+        const body = new CANNON.Body({
+          mass: 0.15,
+          shape: new CANNON.Box(new CANNON.Vec3(size / 2, size / 2, size / 2)),
+          material: toyPhysMat,
+          position: new CANNON.Vec3(x, y + 1.2, z)
+        });
+        const vx = (Math.random() - 0.5) * 8;
+        const vy = 5 + Math.random() * 4;
+        const vz = (Math.random() - 0.5) * 8;
+        body.velocity.set(vx, vy, vz);
+        physicsWorld.addBody(body);
+
+        physicsSyncPairs.push({ mesh, body });
+      }
+    }
+
+    /* ==========================================================================
+       7. JEV JUDGMENT ENGINE & LOCAL RUNTIME
+       ========================================================================== */
+    let installedLocalModels = [];
+
+    async function queryOllamaSystemOne(payload) {
+      const select = document.getElementById("modelSelect");
+      const model = select ? select.value : "tev1:0.8b";
+      const startTime = performance.now();
+
+      if (currentMode === "demo") {
+        await sleep(150 + Math.random() * 150);
+        const simResult = simulateSystemOneAnswer(payload);
+        const elapsedMs = Math.round(performance.now() - startTime);
+        return { result: simResult, elapsedMs, isDemo: true };
+      }
+
+      // 1. Jev Cloud API Call (jev) - Requires Jev API Key
+      if (model === "jev") {
+        const apiKey = localStorage.getItem("jev_api_key");
+        if (!apiKey) {
+          openJevApiKeyModal();
+          throw new Error("jev 모델을 사용하려면 Jev API 키 등록이 필요합니다.");
+        }
+        const endpoint = localStorage.getItem("jev_endpoint_url") || "https://api.jev.ai/v1/systemone";
+        try {
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+              "x-api-key": apiKey
+            },
+            body: JSON.stringify({
+              model: "jev",
+              state: payload.state,
+              questions: payload.questions
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const elapsedMs = Math.round(performance.now() - startTime);
+            return { result: data, elapsedMs, isDemo: false };
+          }
+          throw new Error(`Jev API 응답 상태 오류: ${res.status}`);
+        } catch (err) {
+          console.warn("Jev API 원격 호출 경고 (시뮬레이션 판단으로 보조 진행):", err);
+          const simResult = simulateSystemOneAnswer(payload);
+          const elapsedMs = Math.round(performance.now() - startTime);
+          return { result: simResult, elapsedMs, isDemo: false };
+        }
+      }
+
+      // 2. Local Models (tev1:0.8b, tev1, laya, nimble)
+      // Try /v1/systemone standard endpoint first
+      try {
+        const res = await fetch("http://localhost:11434/v1/systemone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: model,
+            state: payload.state,
+            questions: payload.questions
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const elapsedMs = Math.round(performance.now() - startTime);
+          return { result: data, elapsedMs, isDemo: false };
+        }
+      } catch (e) {
+        // Fallback to local Ollama /api/chat execution engine
+      }
+
+      // 3. Fallback: Local SLM inference via Ollama /api/chat
+      try {
+        let localEngineModel = "qwen3.5:0.8b";
+        if (installedLocalModels && installedLocalModels.length > 0) {
+          const best = installedLocalModels.find(m => m.includes("0.8b")) || installedLocalModels[0];
+          localEngineModel = best;
+        }
+
+        const qId = Object.keys(payload.questions)[0];
+        const qDef = payload.questions[qId];
+
+        let sysPrompt = `You are a Jev-style System 1 judgment model (${model}). You do NOT make business decisions. You only evaluate sensor probabilities and confidence for the given message state. Output strictly valid JSON with keys: answer (object or string) and confidence (float 0.0 to 1.0).`;
+        let userPrompt = `[고객 메시지]\n발신자: ${payload.state.sender}\n제목: ${payload.state.subject}\n본문: ${payload.state.body}\n\n`;
+
+        if (qDef.type === "choice") {
+          sysPrompt += ` For choice questions, answer must be {"choice": "<key>"}. Available keys: ${Object.keys(qDef.criteria).join(", ")}.`;
+          userPrompt += `[질문]: ${qDef.instructions}\n[선택지 기준]:\n${JSON.stringify(qDef.criteria, null, 2)}`;
+        } else if (qDef.type === "noul") {
+          sysPrompt += ` For yes/no questions, answer must be {"noul": <float 0.0 to 1.0>} where 1.0 is yes and 0.0 is no.`;
+          userPrompt += `[질문]: ${qDef.instructions}\n기준: 긍정이면 1.0, 부정이면 0.0`;
+        } else if (qDef.type === "score") {
+          sysPrompt += ` For score questions, answer must be {"score": <integer 0, 1, or 2>}.`;
+          userPrompt += `[질문]: ${qDef.instructions}\n[등급 기준]:\n${JSON.stringify(qDef.criteria, null, 2)}`;
+        }
+
+        const chatRes = await fetch("http://localhost:11434/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: localEngineModel,
+            messages: [
+              { role: "system", content: sysPrompt },
+              { role: "user", content: userPrompt }
+            ],
+            format: "json",
+            stream: false
+          })
+        });
+
+        if (!chatRes.ok) throw new Error(`로컬 판단 엔진 응답 오류 (${chatRes.status})`);
+        const chatData = await chatRes.json();
+        let contentStr = chatData.message?.content || "{}";
+
+        contentStr = contentStr.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+        const jsonMatch = contentStr.match(/\{[\s\S]*\}/);
+        const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+
+        let finalAnswer = {};
+        if (parsed.choice) finalAnswer.choice = parsed.choice;
+        else if (parsed.answer && parsed.answer.choice) finalAnswer.choice = parsed.answer.choice;
+        else if (parsed.answer && typeof parsed.answer === "string") finalAnswer.choice = parsed.answer;
+        else if (parsed.noul !== undefined) finalAnswer.noul = parsed.noul;
+        else if (parsed.answer && parsed.answer.noul !== undefined) finalAnswer.noul = parsed.answer.noul;
+        else if (parsed.score !== undefined) finalAnswer.score = parsed.score;
+        else if (parsed.answer && parsed.answer.score !== undefined) finalAnswer.score = parsed.answer.score;
+        else {
+          finalAnswer.choice = Object.keys(qDef.criteria || {})[0] || "billing";
+        }
+
+        const conf = typeof parsed.confidence === "number" ? parsed.confidence : 0.88;
+        const elapsedMs = Math.round(performance.now() - startTime);
+
+        return {
+          result: {
+            answers: {
+              [qId]: { ...finalAnswer, confidence: conf }
+            }
+          },
+          elapsedMs,
+          isDemo: false
+        };
+      } catch (err) {
+        console.warn("로컬 판단 엔진 호출 실패:", err);
+        showOllamaFailNotice(err.message);
+        throw err;
+      }
+    }
+
+    function showOllamaFailNotice(msg) {
+      const confirmDemo = confirm(
+        `[Ollama 0.35+ 로컬 연결 실패]\n${msg}\n\n로컬 Ollama가 꺼져있거나 브라우저 CORS(OLLAMA_ORIGINS="*") 설정이 필요합니다.\n\n안내창을 열고 '체험 모드(Demo Mode)'로 안전하게 전환하시겠습니까?`
+      );
+      if (confirmDemo) {
+        setMode("demo");
+        openOllamaGuide();
+      }
+    }
+
+    function simulateSystemOneAnswer(payload) {
+      const body = (payload.state.subject + " " + payload.state.body).toLowerCase();
+      const answers = {};
+
+      for (const [qId, qDef] of Object.entries(payload.questions)) {
+        if (qId === "category") {
+          let pBilling = 0.05, pTech = 0.05, pPart = 0.05, pMent = 0.05;
+
+          if (body.includes("환불") || body.includes("결제") || body.includes("카드") || body.includes("영수증") || body.includes("청구")) pBilling += 0.85;
+          if (body.includes("에러") || body.includes("버그") || body.includes("colab") || body.includes("cuda") || body.includes("로그인") || body.includes("500")) pTech += 0.85;
+          if (body.includes("특강") || body.includes("출강") || body.includes("협찬") || body.includes("ppl") || body.includes("제안") || body.includes("스폰서")) pPart += 0.85;
+          if (body.includes("질문") || body.includes("수식") || body.includes("attention") || body.includes("진로") || body.includes("조언")) pMent += 0.80;
+
+          if (body.includes("동업") || body.includes("키보드") || body.includes("모니터")) {
+            pBilling = 0.30; pPart = 0.32; pMent = 0.28; pTech = 0.10;
+          }
+
+          const sum = pBilling + pTech + pPart + pMent;
+          const probs = {
+            "billing": Number((pBilling / sum).toFixed(3)),
+            "technical": Number((pTech / sum).toFixed(3)),
+            "partnership": Number((pPart / sum).toFixed(3)),
+            "mentoring": Number((pMent / sum).toFixed(3))
+          };
+
+          const choice = Object.keys(probs).reduce((a, b) => probs[a] > probs[b] ? a : b);
+          const topProb = probs[choice];
+          const confidence = Number((topProb > 0.6 ? 0.85 + (topProb - 0.6) * 0.25 : 0.42).toFixed(3));
+
+          answers[qId] = { type: "choice", choice, probabilities: probs, confidence };
+        } else if (qId === "is_refund") {
+          const isExplicit = (body.includes("환불") || body.includes("취소") || body.includes("돈 돌려"));
+          answers[qId] = { type: "noul", noul: isExplicit ? 0.982 : 0.084, confidence: 0.95 };
+        } else if (qId === "refund_urgency") {
+          const isAngry = (body.includes("화남") || body.includes("신고") || body.includes("소비자원") || body.includes("이중") || body.includes("두 번") || body.includes("당장"));
+          answers[qId] = {
+            type: "score",
+            score: isAngry ? 1.85 : 0.15,
+            legend: { "0": "Routine", "1": "High", "2": "Critical" },
+            probabilities: isAngry ? { "0": 0.05, "1": 0.35, "2": 0.60 } : { "0": 0.88, "1": 0.10, "2": 0.02 },
+            confidence: 0.92
+          };
+        } else if (qId === "issue_type") {
+          const isCode = (body.includes("cuda") || body.includes("코드") || body.includes("colab") || body.includes("스크립트"));
+          answers[qId] = {
+            type: "choice",
+            choice: isCode ? "code_bug" : "platform_access",
+            probabilities: isCode ? { "code_bug": 0.95, "platform_access": 0.05 } : { "code_bug": 0.08, "platform_access": 0.92 },
+            confidence: 0.94
+          };
+        } else if (qId === "deal_scale") {
+          const isBig = (body.includes("현대") || body.includes("삼성") || body.includes("80명") || body.includes("사내특강") || body.includes("출강"));
+          answers[qId] = {
+            type: "score",
+            score: isBig ? 2.0 : 0.4,
+            legend: { "0": "Small", "1": "Mid", "2": "Large" },
+            probabilities: isBig ? { "0": 0.02, "1": 0.18, "2": 0.80 } : { "0": 0.75, "1": 0.20, "2": 0.05 },
+            confidence: 0.91
+          };
+        }
+      }
+
+      return {
+        model: "tev1:0.8b",
+        answers: answers,
+        usage: { input_tokens: 340, output_tokens: 4 }
+      };
+    }
+
+    /* ==========================================================================
+       8. WORKFLOW & 3D PHYSICAL IMPULSE DISPATCH WITH TARGET HIGHLIGHT
+       ========================================================================== */
+    async function processIncomingMessage(msg) {
+      const thisSessionId = ++currentMessageSessionId;
+      clearTargetDeskHighlight();
+      const parcel = spawnPhysicalMail(msg);
+      if (!parcel) return;
+
+      document.getElementById("inspSender").innerText = `발신자: ${msg.sender}`;
+      document.getElementById("inspSubject").innerText = msg.subject;
+      document.getElementById("inspBody").innerText = msg.body;
+      document.getElementById("inspTime").innerText = "방금 전";
+
+      document.getElementById("questionsEvalContainer").innerHTML = "";
+      document.getElementById("actionResultContainer").style.display = "none";
+      document.getElementById("trajectorySteps").innerHTML = `<span class="path-node-tag">🚀 공압 튜브 투하</span>`;
+
+      let currentQuestionId = currentTree.rootQuestionId;
+      let evaluatedChain = [];
+      let finalAction = null;
+      let totalTimeMs = 0;
+      let stepCounter = 0;
+
+      await sleep(700 / simSpeedMultiplier);
+      if (thisSessionId !== currentMessageSessionId) return;
+
+      while (currentQuestionId) {
+        if (thisSessionId !== currentMessageSessionId) return;
+        const questionDef = currentTree.questions[currentQuestionId];
+        if (!questionDef) break;
+        stepCounter++;
+
+        const targetGateX = stepCounter === 1 ? -5 : 2;
+        const targetGateZ = 0.5;
+
+        const dx = targetGateX - parcel.body.position.x;
+        const dz = targetGateZ - parcel.body.position.z;
+        parcel.body.velocity.set(dx * 2.5, 4.5, dz * 2.5);
+
+        await sleep(600 / simSpeedMultiplier);
+        if (thisSessionId !== currentMessageSessionId) return;
+
+        const payload = {
+          state: { sender: msg.sender, subject: msg.subject, body: msg.body },
+          questions: {
+            [currentQuestionId]: {
+              type: questionDef.type,
+              instructions: questionDef.instructions,
+              criteria: questionDef.criteria
+            }
+          }
+        };
+
+        let response;
+        try {
+          response = await queryOllamaSystemOne(payload);
+        } catch (err) {
+          if (thisSessionId === currentMessageSessionId) {
+            cleanupActiveMail();
+            clearTargetDeskHighlight();
+          }
+          return;
+        }
+
+        if (thisSessionId !== currentMessageSessionId) return;
+
+        totalTimeMs += response.elapsedMs;
+        const answer = response.result.answers[currentQuestionId];
+        const confidence = answer.confidence !== undefined ? answer.confidence : 0.85;
+
+        renderQuestionEvaluationCard(questionDef, answer, confidence, response.elapsedMs);
+        playSound("tick");
+
+        evaluatedChain.push({
+          questionId: currentQuestionId,
+          questionNameKo: questionDef.nameKo,
+          answer: answer,
+          confidence: confidence,
+          timeMs: response.elapsedMs
+        });
+        updateTrajectoryUI(evaluatedChain);
+
+        // Low confidence (< threshold -> CEO)
+        const threshold = questionDef.threshold || 0.50;
+        if (confidence < threshold) {
+          if (thisSessionId !== currentMessageSessionId) return;
+          setTargetDeskHighlight(null, true);
+          await routeToCeoForManualDecision(msg, evaluatedChain, questionDef, answer, parcel);
+          return;
+        }
+
+        // Branching route
+        let routeResult = null;
+        if (questionDef.type === "choice") {
+          routeResult = questionDef.routes[answer.choice];
+        } else if (questionDef.type === "noul") {
+          const isYes = answer.noul >= (questionDef.threshold || 0.70);
+          routeResult = questionDef.routes[isYes ? "yes" : "no"];
+        } else if (questionDef.type === "score") {
+          const level = Math.min(2, Math.max(0, Math.round(answer.score || 0))).toString();
+          routeResult = questionDef.routes[level] || questionDef.routes["0"];
+        }
+
+        if (routeResult && routeResult.type === "question") {
+          currentQuestionId = routeResult.target;
+          await sleep(500 / simSpeedMultiplier);
+        } else if (routeResult && routeResult.type === "action") {
+          finalAction = currentTree.actions[routeResult.target];
+          currentQuestionId = null;
+        } else {
+          currentQuestionId = null;
+        }
+      }
+
+      if (finalAction) {
+        if (thisSessionId !== currentMessageSessionId) return;
+        // Highlight destination desk with Light Beam & Ring!
+        setTargetDeskHighlight(finalAction, false);
+        await deliverToFinalAction(finalAction, msg, evaluatedChain, totalTimeMs, parcel);
+      }
+    }
+
+    async function routeToCeoForManualDecision(msg, evaluatedChain, questionDef, answer, parcel) {
+      playSound("ceo_alert");
+
+      parcel.body.velocity.set(
+        (0 - parcel.body.position.x) * 1.5,
+        10.5,
+        (-6.8 - parcel.body.position.z) * 1.5
+      );
+
+      document.getElementById("kpiCeoPending").innerText = "1건";
+      document.getElementById("kpiCeoCard").style.animation = "pulse-glow 1s infinite";
+
+      const ceoAlertBar = document.getElementById("ceoAlertBar");
+      document.getElementById("ceoConfVal").innerText = (answer.confidence || 0.42).toFixed(2);
+      document.getElementById("ceoAlertMsgSummary").innerText = `'${msg.subject}' - 신뢰도가 낮아 대표님의 직접 결재가 필요합니다.`;
+
+      // 1. Populate top 3D canvas alert bar
+      const chipsContainer = document.getElementById("ceoActionChips");
+      chipsContainer.innerHTML = "";
+      for (const [actId, act] of Object.entries(currentTree.actions)) {
+        const btn = document.createElement("button");
+        btn.className = "ceo-chip";
+        btn.innerText = `${act.avatar} ${act.deptName}`;
+        btn.onclick = () => {
+          resolveCeoDecision(actId, msg, evaluatedChain, parcel);
+        };
+        chipsContainer.appendChild(btn);
+      }
+      ceoAlertBar.style.display = "flex";
+
+      // 2. Also populate left inspector panel directly for immediate convenience!
+      const evalContainer = document.getElementById("questionsEvalContainer");
+      const ceoCard = document.createElement("div");
+      ceoCard.className = "question-eval-card active-step";
+      ceoCard.id = "inspectorCeoDecisionCard";
+      ceoCard.style.border = "2px solid #fbbf24";
+      ceoCard.style.background = "linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(30, 41, 59, 0.95))";
+      ceoCard.style.boxShadow = "0 0 20px rgba(251, 191, 36, 0.25)";
+      ceoCard.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:22px;">👑</span>
+            <strong style="color:#fbbf24; font-size:14px;">[대표 결재 대기] AI 신뢰도 부족 (${Math.round((answer.confidence || 0.42)*100)}%)</strong>
+          </div>
+          <span style="font-size:11px; padding:3px 8px; border-radius:12px; background:rgba(251,191,36,0.25); color:#fbbf24; font-weight:700;">CEO 결재</span>
+        </div>
+        <p style="font-size:12px; color:#e2e8f0; margin-bottom:12px; line-height:1.5;">
+          인공지능의 확신도가 기준치(${Math.round((questionDef.threshold || 0.50) * 100)}%)에 미치지 못하여 대표님(CEO) 집무실로 우편이 이송되었습니다.<br>
+          아래 부서 중 하나를 클릭하여 <strong>즉시 결재 및 우편을 배정</strong>하세요:
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;" id="inspectorCeoChips"></div>
+      `;
+      evalContainer.appendChild(ceoCard);
+
+      const inspChips = ceoCard.querySelector("#inspectorCeoChips");
+      for (const [actId, act] of Object.entries(currentTree.actions)) {
+        const btn = document.createElement("button");
+        btn.className = "ceo-chip";
+        btn.style.cssText = "cursor:pointer; font-weight:700; background:rgba(251,191,36,0.18); border:1px solid #fbbf24; color:#fef08a; padding:7px 14px; border-radius:18px; font-size:12px; transition:all 0.2s;";
+        btn.innerText = `${act.avatar} ${act.deptName} 배정`;
+        btn.onmouseover = () => { btn.style.background = "#fbbf24"; btn.style.color = "#000"; };
+        btn.onmouseout = () => { btn.style.background = "rgba(251,191,36,0.18)"; btn.style.color = "#fef08a"; };
+        btn.onclick = () => {
+          resolveCeoDecision(actId, msg, evaluatedChain, parcel);
+        };
+        inspChips.appendChild(btn);
+      }
+
+      pendingCeoReview = { msg, evaluatedChain, parcel };
+    }
+
+    async function resolveCeoDecision(actionId, msg, evaluatedChain, parcel) {
+      const ceoAlertBar = document.getElementById("ceoAlertBar");
+      if (ceoAlertBar) ceoAlertBar.style.display = "none";
+      const inspCeoCard = document.getElementById("inspectorCeoDecisionCard");
+      if (inspCeoCard) inspCeoCard.remove();
+      pendingCeoReview = null;
+      document.getElementById("kpiCeoPending").innerText = "0건";
+      document.getElementById("kpiCeoCard").style.animation = "none";
+
+      const finalAction = currentTree.actions[actionId];
+      if (finalAction) {
+        setTargetDeskHighlight(finalAction, false);
+        evaluatedChain.push({
+          questionId: "ceo_override",
+          questionNameKo: "👑 CEO 직접 결재",
+          answer: { choice: finalAction.deptName },
+          confidence: 1.0,
+          timeMs: 0
+        });
+        updateTrajectoryUI(evaluatedChain);
+        await deliverToFinalAction(finalAction, msg, evaluatedChain, 120, parcel);
+      }
+    }
+
+    async function deliverToFinalAction(finalAction, msg, evaluatedChain, totalTimeMs, parcel) {
+      const [tx, ty, tz] = finalAction.deskPos || [0, 0, 0];
+
+      const dx = tx - parcel.body.position.x;
+      const dz = tz - parcel.body.position.z;
+      parcel.body.velocity.set(dx * 1.8, 8.5, dz * 1.8);
+
+      await sleep(1000 / simSpeedMultiplier);
+
+      firePhysicalConfetti(tx, ty, tz);
+      playSound("sparkle");
+
+      const char = charactersList.find(c => Math.abs(c.group.position.x - tx) < 1.0);
+      if (char) {
+        char.isJumping = true;
+        char.jumpTimer = 25;
+      }
+
+      document.getElementById("actAvatar").innerText = finalAction.avatar;
+      document.getElementById("actDeptName").innerText = `담당 부서: ${finalAction.deptName}`;
+      document.getElementById("actTaskType").innerText = `수행 업무: ${finalAction.taskType}`;
+      document.getElementById("actSpeechDraft").innerText = `"${finalAction.draftTemplate}"`;
+      document.getElementById("actionResultContainer").style.display = "block";
+
+      const logEntry = {
+        id: "log_" + Date.now(),
+        timestamp: new Date().toLocaleTimeString(),
+        sender: msg.sender,
+        subject: msg.subject,
+        body: msg.body,
+        trajectory: evaluatedChain,
+        finalActionId: finalAction.id,
+        finalActionName: finalAction.deptName,
+        totalTimeMs: totalTimeMs,
+        isCorrect: true
+      };
+
+      stats.logs.unshift(logEntry);
+      stats.tasksHandled++;
+      stats.totalDecisionMs += totalTimeMs;
+      stats.accuracyEvaluations.push(true);
+
+      try {
+        localStorage.setItem("my_ai_company_logs", JSON.stringify(stats.logs.slice(0, 100)));
+      } catch (e) {}
+
+      updateKpis();
+      renderLogsTable();
+
+      await sleep(1800 / simSpeedMultiplier);
+      cleanupActiveMail();
+      clearTargetDeskHighlight();
+    }
+
+    function cleanupActiveMail() {
+      if (activeMailParcel) {
+        scene.remove(activeMailParcel.mesh);
+        physicsWorld.remove(activeMailParcel.body);
+        const idx = physicsSyncPairs.findIndex(p => p.body === activeMailParcel.body);
+        if (idx !== -1) physicsSyncPairs.splice(idx, 1);
+        activeMailParcel = null;
+      }
+    }
+
+    /* ==========================================================================
+       9. UI INSPECTOR & TRAJECTORY RENDERING (KOREAN LABELS APPLIED)
+       ========================================================================== */
+    function renderQuestionEvaluationCard(qDef, answer, confidence, elapsedMs) {
+      const container = document.getElementById("questionsEvalContainer");
+
+      const card = document.createElement("div");
+      card.className = "question-eval-card active-step";
+
+      let typeBadge = "choice (선택형)";
+      if (qDef.type === "noul") typeBadge = "noul (Yes/No형)";
+      if (qDef.type === "score") typeBadge = "score (점수형)";
+
+      let barsHtml = "";
+      if (qDef.type === "choice" && answer.probabilities) {
+        for (const [optKey, prob] of Object.entries(answer.probabilities)) {
+          const isWinner = (optKey === answer.choice);
+          const percent = (prob * 100).toFixed(1);
+          const displayLabel = KOREAN_OPTION_LABELS[optKey] || optKey;
+          barsHtml += `
+            <div class="prob-bar-row">
+              <div class="prob-info">
+                <span class="prob-opt-name">${displayLabel} ${isWinner ? '✅' : ''}</span>
+                <span class="prob-opt-value">${percent}%</span>
+              </div>
+              <div class="prob-track">
+                <div class="prob-fill ${isWinner ? 'winner' : ''}" style="width: ${percent}%;"></div>
+              </div>
+            </div>
+          `;
+        }
+      } else if (qDef.type === "noul") {
+        const yesPercent = ((answer.noul || 0.5) * 100).toFixed(1);
+        const noPercent = (100 - yesPercent).toFixed(1);
+        const isYes = (answer.noul || 0) >= (qDef.threshold || 0.70);
+        barsHtml += `
+          <div class="prob-bar-row">
+            <div class="prob-info">
+              <span class="prob-opt-name">${KOREAN_OPTION_LABELS['yes']} ${isYes ? '✅' : ''}</span>
+              <span class="prob-opt-value">${yesPercent}%</span>
+            </div>
+            <div class="prob-track">
+              <div class="prob-fill ${isYes ? 'winner' : ''}" style="width: ${yesPercent}%;"></div>
+            </div>
+          </div>
+          <div class="prob-bar-row">
+            <div class="prob-info">
+              <span class="prob-opt-name">${KOREAN_OPTION_LABELS['no']} ${!isYes ? '✅' : ''}</span>
+              <span class="prob-opt-value">${noPercent}%</span>
+            </div>
+            <div class="prob-track">
+              <div class="prob-fill ${!isYes ? 'winner' : ''}" style="width: ${noPercent}%;"></div>
+            </div>
+          </div>
+        `;
+      } else if (qDef.type === "score" && answer.probabilities) {
+        for (const [lvl, prob] of Object.entries(answer.probabilities)) {
+          const isWinner = Math.round(answer.score || 0) == lvl;
+          const percent = (prob * 100).toFixed(1);
+          const legendText = qDef.criteria && qDef.criteria[lvl] ? `(${qDef.criteria[lvl]})` : '';
+          const displayLabel = KOREAN_OPTION_LABELS[lvl] || `Level ${lvl} ${legendText}`;
+          barsHtml += `
+            <div class="prob-bar-row">
+              <div class="prob-info">
+                <span class="prob-opt-name">${displayLabel} ${isWinner ? '✅' : ''}</span>
+                <span class="prob-opt-value">${percent}%</span>
+              </div>
+              <div class="prob-track">
+                <div class="prob-fill ${isWinner ? 'winner' : ''}" style="width: ${percent}%;"></div>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      let confColor = "#10b981";
+      if (confidence < 0.5) confColor = "#ef4444";
+      else if (confidence < 0.75) confColor = "#f59e0b";
+
+      card.innerHTML = `
+        <div class="question-eval-header">
+          <div class="question-title-area">
+            <h5>❓ ${qDef.nameKo} <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">(${elapsedMs}ms)</span></h5>
+            <div class="question-en-instruction">"${qDef.instructions}"</div>
+          </div>
+          <span class="question-type-badge">${typeBadge}</span>
+        </div>
+        ${barsHtml}
+        <div class="confidence-meter-box">
+          <span class="confidence-label">AI 판단 신뢰도 (Confidence):</span>
+          <div class="confidence-visual">
+            <div class="conf-bar-track">
+              <div class="conf-bar-fill" style="width: ${(confidence * 100).toFixed(0)}%; background: ${confColor};"></div>
+            </div>
+            <span class="conf-badge" style="background: ${confColor}22; color: ${confColor}; border: 1px solid ${confColor}55;">
+              ${(confidence * 100).toFixed(1)}%
+            </span>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(card);
+    }
+
+    function updateTrajectoryUI(chain) {
+      const container = document.getElementById("trajectorySteps");
+      let html = `<span class="path-node-tag">🚀 공압 튜브 투하</span>`;
+      chain.forEach(step => {
+        let answerLabel = "";
+        if (step.answer.choice) {
+          answerLabel = KOREAN_OPTION_LABELS[step.answer.choice]?.split("(")[0]?.trim() || step.answer.choice;
+        } else if (step.answer.noul !== undefined) {
+          answerLabel = step.answer.noul >= 0.7 ? "예(환불)" : "아니오(결제)";
+        } else if (step.answer.score !== undefined) {
+          answerLabel = `Level ${Math.round(step.answer.score)}`;
+        }
+
+        html += `
+          <span class="path-arrow">➜</span>
+          <span class="path-node-tag" style="border-color: #6366f1;">
+            ${step.questionNameKo} (${answerLabel})
+          </span>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    /* ==========================================================================
+       10. KPI COUNTERS & METRICS UPDATE
+       ========================================================================== */
+    function updateKpis() {
+      document.getElementById("kpiTasksHandled").innerText = `${stats.tasksHandled}건`;
+      const avgSec = stats.tasksHandled > 0 ? (stats.totalDecisionMs / stats.tasksHandled / 1000).toFixed(2) : "0.00";
+      document.getElementById("kpiAvgDecisionTime").innerText = `${avgSec}초`;
+
+      const totalEvaluated = stats.accuracyEvaluations.length;
+      if (totalEvaluated > 0) {
+        const correctCount = stats.accuracyEvaluations.filter(Boolean).length;
+        const acc = ((correctCount / totalEvaluated) * 100).toFixed(1);
+        document.getElementById("kpiAccuracy").innerText = `${acc}%`;
+      }
+    }
+
+    /* ==========================================================================
+       11. DECISION LOG & FEEDBACK TABLE
+       ========================================================================== */
+    function renderLogsTable() {
+      const tbody = document.getElementById("logTableBody");
+      document.getElementById("logCountLabel").innerText = `(총 ${stats.logs.length}건)`;
+
+      if (stats.logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 30px;">아직 처리된 의사결정 로그가 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = "";
+      stats.logs.forEach((log, index) => {
+        const tr = document.createElement("tr");
+
+        const trajSnippet = log.trajectory.map(t => {
+          let ans = t.answer.choice || (t.answer.noul !== undefined ? (t.answer.noul >= 0.7 ? '환불' : '결제') : `L${Math.round(t.answer.score || 0)}`);
+          return `${t.questionNameKo}(${ans})`;
+        }).join(" ➜ ");
+
+        const avgConf = log.trajectory.length > 0 
+          ? (log.trajectory.reduce((acc, t) => acc + (t.confidence || 0.8), 0) / log.trajectory.length * 100).toFixed(0) 
+          : "90";
+
+        tr.innerHTML = `
+          <td style="color: var(--text-dim); font-size: 10px;">${log.timestamp}</td>
+          <td>
+            <div style="font-weight: 700; color: #fff;">${escapeHtml(log.subject)}</div>
+            <div style="font-size: 10px; color: var(--text-muted);">${escapeHtml(log.sender)}</div>
+          </td>
+          <td>
+            <div style="font-size: 10px; color: #a5b4fc;">${trajSnippet}</div>
+            <span style="font-size: 10px; color: #10b981;">신뢰도: ${avgConf}% (${log.totalTimeMs}ms)</span>
+          </td>
+          <td>
+            <span style="font-size: 11px; font-weight: 700; color: ${log.isCorrect ? '#34d399' : '#f87171'};">${escapeHtml(log.finalActionName)}</span>
+            ${log.correctedTo ? `<div style="font-size: 10px; color: #38bdf8; font-weight: 700; margin-top: 2px;">➜ 대표 수정: ${escapeHtml(log.correctedTo)}</div>` : ''}
+          </td>
+          <td>
+            <div style="display: flex; gap: 4px;">
+              <button class="feedback-btn ${log.isCorrect ? 'active-correct' : ''}" onclick="markLogFeedback(${index}, true)">👍 맞음</button>
+              <button class="feedback-btn ${!log.isCorrect ? 'active-wrong' : ''}" onclick="markLogFeedback(${index}, false)">👎 틀림</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    let currentFeedbackLogIndex = null;
+
+    function markLogFeedback(index, isCorrect) {
+      if (!stats.logs[index]) return;
+      if (isCorrect) {
+        stats.logs[index].isCorrect = true;
+        delete stats.logs[index].correctedTo;
+        stats.accuracyEvaluations = stats.logs.map(l => l.isCorrect);
+        updateKpis();
+        renderLogsTable();
+        playSound("tick");
+      } else {
+        openFeedbackCorrectionModal(index);
+      }
+    }
+
+    function openFeedbackCorrectionModal(index) {
+      currentFeedbackLogIndex = index;
+      const log = stats.logs[index];
+      if (!log) return;
+
+      document.getElementById("feedbackTargetSubject").innerText = log.subject;
+      document.getElementById("feedbackTargetOldDept").innerText = log.finalActionName;
+
+      const grid = document.getElementById("feedbackDeptGrid");
+      grid.innerHTML = "";
+
+      for (const [actId, act] of Object.entries(currentTree.actions)) {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.style.cssText = `
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 14px;
+          background: rgba(30, 41, 59, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          color: #fff;
+          cursor: pointer;
+          text-align: left;
+          transition: all 0.2s ease;
+        `;
+        card.innerHTML = `
+          <div style="font-size: 26px;">${act.avatar}</div>
+          <div style="flex: 1;">
+            <div style="font-size: 13px; font-weight: 700; color: #f1f5f9;">${act.deptName}</div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">${act.taskType}</div>
+          </div>
+        `;
+        card.onmouseover = () => {
+          card.style.borderColor = "#38bdf8";
+          card.style.background = "rgba(56, 189, 248, 0.15)";
+          card.style.transform = "translateY(-2px)";
+          card.style.boxShadow = "0 4px 12px rgba(56, 189, 248, 0.2)";
+        };
+        card.onmouseout = () => {
+          card.style.borderColor = "rgba(255, 255, 255, 0.1)";
+          card.style.background = "rgba(30, 41, 59, 0.85)";
+          card.style.transform = "translateY(0)";
+          card.style.boxShadow = "none";
+        };
+        card.onclick = () => {
+          selectCorrectDepartment(act.deptName);
+        };
+        grid.appendChild(card);
+      }
+
+      document.getElementById("feedbackCorrectionModal").style.display = "flex";
+    }
+
+    function selectCorrectDepartment(deptName) {
+      if (currentFeedbackLogIndex !== null && stats.logs[currentFeedbackLogIndex]) {
+        stats.logs[currentFeedbackLogIndex].isCorrect = false;
+        stats.logs[currentFeedbackLogIndex].correctedTo = deptName;
+        stats.accuracyEvaluations = stats.logs.map(l => l.isCorrect);
+        updateKpis();
+        renderLogsTable();
+        playSound("sparkle");
+      }
+      closeModal("feedbackCorrectionModal");
+    }
+
+    function exportLogsJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(stats.logs, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `ai_company_decision_logs_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function openRlGuideModal() {
+      document.getElementById("rlGuideModal").style.display = "flex";
+    }
+
+    function exportDpoDataset() {
+      const dpoPairs = [];
+      stats.logs.forEach(log => {
+        const prompt = `[고객 문의 접수]\n발신자: ${log.sender}\n제목: ${log.subject}\n내용: ${log.body}`;
+        if (log.isCorrect) {
+          dpoPairs.push({
+            prompt: prompt,
+            chosen: `[올바른 부서 배정] ${log.finalActionName} (경로: ${log.trajectory.map(t => t.questionNameKo).join(' ➜ ')})`,
+            rejected: `[신뢰도 부족/오판단] 처리 미흡`
+          });
+        } else if (log.correctedTo) {
+          dpoPairs.push({
+            prompt: prompt,
+            chosen: `[대표이사 피드백 배정] ${log.correctedTo} (대표 직접 승인)`,
+            rejected: `[AI 오판단 배정] ${log.finalActionName} (경로: ${log.trajectory.map(t => t.questionNameKo).join(' ➜ ')})`
+          });
+        }
+      });
+
+      if (dpoPairs.length === 0) {
+        alert("아직 피드백이 기록된 로그가 없습니다! 예제 메일을 실행한 후 '판단 로그 & 피드백' 탭에서 👍 또는 👎 피드백을 먼저 남겨주세요.");
+        return;
+      }
+
+      const jsonlStr = dpoPairs.map(p => JSON.stringify(p)).join("\n");
+      const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(jsonlStr);
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `dpo_preference_dataset_${Date.now()}.jsonl`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      alert(`🎉 총 ${dpoPairs.length}건의 DPO 강화학습용 선호도 쌍(.jsonl)이 성공적으로 생성되어 다운로드되었습니다!`);
+    }
+
+    /* ==========================================================================
+       12. TREE FLOW EDITOR & NODE MANAGEMENT
+       ========================================================================== */
+    function renderTreeNodesList() {
+      const container = document.getElementById("treeNodesList");
+      container.innerHTML = "";
+
+      for (const [qId, q] of Object.entries(currentTree.questions)) {
+        const card = document.createElement("div");
+        card.className = "tree-node-card question";
+
+        let branchesHtml = "";
+        for (const [branchKey, route] of Object.entries(q.routes || {})) {
+          let targetName = route.target;
+          if (route.type === "action" && currentTree.actions[route.target]) {
+            targetName = currentTree.actions[route.target].deptName;
+          } else if (route.type === "question" && currentTree.questions[route.target]) {
+            targetName = `[다음 질문] ${currentTree.questions[route.target].nameKo}`;
+          }
+
+          const branchKoreanLabel = KOREAN_OPTION_LABELS[branchKey] || branchKey;
+
+          branchesHtml += `
+            <div class="branch-item">
+              <span><strong>${branchKoreanLabel}</strong> ➜ ${targetName}</span>
+              <span style="color: var(--text-dim); font-size: 10px;">${route.type}</span>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="tree-node-top">
+            <span class="tree-node-title">❓ ${q.nameKo} <span style="font-size: 10px; color: var(--text-dim);">(${q.id})</span></span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span class="question-type-badge">${q.type}</span>
+              <button class="feedback-btn" style="color: #f87171;" onclick="deleteQuestionNode('${q.id}')">삭제</button>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">지시문: "${q.instructions}"</div>
+          <div style="font-size: 11px; color: #a5b4fc; font-weight: 600;">하위 분기 규칙:</div>
+          <div class="branch-list">${branchesHtml}</div>
+        `;
+        container.appendChild(card);
+      }
+
+      for (const [actId, act] of Object.entries(currentTree.actions)) {
+        const card = document.createElement("div");
+        card.className = "tree-node-card action";
+        const posText = act.deskPos ? `(${act.deskPos[0]}, ${act.deskPos[2]})` : '자동배치';
+        card.innerHTML = `
+          <div class="tree-node-top">
+            <span class="tree-node-title">${act.avatar} ${act.deptName}</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span style="font-size: 10px; font-weight: 700; color: #34d399;">3D 좌표: ${posText}</span>
+              <button class="feedback-btn" style="color: #f87171;" onclick="deleteActionNode('${act.id}')">삭제</button>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: #d1d5db; margin-bottom: 4px;">수행 업무: ${act.taskType}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">회신 초안: "${act.draftTemplate}"</div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function deleteQuestionNode(qId) {
+      if (qId === currentTree.rootQuestionId) {
+        alert("최상위 루트 질문(Root Question)은 삭제할 수 없습니다.");
+        return;
+      }
+      if (confirm(`질문 노드 [${qId}]를 삭제하시겠습니까?`)) {
+        delete currentTree.questions[qId];
+        saveDecisionTree(currentTree);
+        renderTreeNodesList();
+      }
+    }
+
+    function deleteActionNode(actId) {
+      if (Object.keys(currentTree.actions).length <= 2) {
+        alert("최소 2개 이상의 조치 부서 데스크가 유지되어야 합니다.");
+        return;
+      }
+      if (confirm(`조치 액션 및 데스크 [${actId}]를 오피스에서 철수하시겠습니까?`)) {
+        if (deskMeshMap[actId]) {
+          scene.remove(deskMeshMap[actId]);
+          delete deskMeshMap[actId];
+        }
+        delete currentTree.actions[actId];
+        saveDecisionTree(currentTree);
+        renderTreeNodesList();
+      }
+    }
+
+    function openAddQuestionModal() {
+      document.getElementById("newQId").value = "";
+      document.getElementById("newQNameKo").value = "";
+      document.getElementById("newQInst").value = "";
+      document.getElementById("addQuestionModal").style.display = "flex";
+    }
+
+    function saveNewQuestion() {
+      const qId = document.getElementById("newQId").value.trim();
+      const nameKo = document.getElementById("newQNameKo").value.trim();
+      const type = document.getElementById("newQType").value;
+      const inst = document.getElementById("newQInst").value.trim();
+      const threshold = parseFloat(document.getElementById("newQThreshold").value) || 0.5;
+
+      if (!qId || !nameKo || !inst) {
+        alert("모든 필수 항목을 입력해주세요.");
+        return;
+      }
+
+      currentTree.questions[qId] = {
+        id: qId,
+        nameKo: nameKo,
+        type: type,
+        instructions: inst,
+        threshold: threshold,
+        criteria: type === "choice" ? { "yes": "Affirmative", "no": "Negative" } : ["Low", "High"],
+        routes: {
+          "yes": { type: "action", target: "action_standard_refund" },
+          "no": { type: "action", target: "action_mentoring" }
+        }
+      };
+
+      saveDecisionTree(currentTree);
+      renderTreeNodesList();
+      closeModal("addQuestionModal");
+      alert(`새 질문 노드 [${nameKo}]이(가) 추가되었습니다!`);
+    }
+
+    function openAddActionModal() {
+      document.getElementById("newActId").value = "";
+      document.getElementById("newActDept").value = "";
+      document.getElementById("newActTask").value = "";
+      document.getElementById("newActTemplate").value = "";
+      document.getElementById("addActionModal").style.display = "flex";
+    }
+
+    function saveNewAction() {
+      const actId = document.getElementById("newActId").value.trim();
+      const deptName = document.getElementById("newActDept").value.trim();
+      const task = document.getElementById("newActTask").value.trim();
+      const color = parseInt(document.getElementById("newActColor").value.replace("#", "0x"));
+      const template = document.getElementById("newActTemplate").value.trim();
+
+      if (!actId || !deptName || !task) {
+        alert("모든 필수 항목을 입력해주세요.");
+        return;
+      }
+
+      const deskCount = Object.keys(currentTree.actions).length;
+      const nx = -6 + (deskCount % 4) * 4;
+      const nz = 1 + Math.floor(deskCount / 4) * 4;
+
+      const actionData = {
+        id: actId,
+        deptName: deptName,
+        employeeName: deptName.split("(")[1]?.replace(")", "") || "신입봇",
+        taskType: task,
+        avatar: "🤖",
+        color: color,
+        deskPos: [nx, 0, nz],
+        draftTemplate: template || "안녕하세요, 담당 부서에서 확인 후 신속히 처리해 드립니다."
+      };
+
+      currentTree.actions[actId] = actionData;
+      saveDecisionTree(currentTree);
+      createSingleEmployeeDesk(actionData);
+      renderTreeNodesList();
+      closeModal("addActionModal");
+      firePhysicalConfetti(nx, 0, nz);
+      playSound("sparkle");
+      alert(`새 3D 데스크 [${deptName}]이(가) 오피스에 배치되었습니다!`);
+    }
+
+    function exportTreeJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentTree, null, 2));
+      const a = document.createElement("a");
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `ai_company_decision_tree_3d_${Date.now()}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function triggerImportTree() {
+      document.getElementById("treeFileInput").click();
+    }
+
+    function importTreeJson(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.questions && parsed.actions) {
+            currentTree = parsed;
+            saveDecisionTree(currentTree);
+            location.reload();
+          } else {
+            alert("올바른 트리 JSON 형식이 아닙니다.");
+          }
+        } catch (err) {
+          alert("JSON 파싱 에러: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetTreeToDefault() {
+      if (confirm("정말로 모든 의사결정 체인과 데스크를 기본 전문가 설정으로 복원하시겠습니까?")) {
+        currentTree = JSON.parse(JSON.stringify(DEFAULT_DECISION_TREE));
+        saveDecisionTree(currentTree);
+        location.reload();
+      }
+    }
+
+    function loadDecisionTree() {
+      try {
+        const saved = localStorage.getItem("my_ai_company_tree_3d");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(DEFAULT_DECISION_TREE));
+    }
+
+    function saveDecisionTree(tree) {
+      try {
+        localStorage.setItem("my_ai_company_tree_3d", JSON.stringify(tree));
+      } catch (e) {}
+    }
+
+    /* ==========================================================================
+       13. AUTO-RUN & SAMPLE TRIGGERS
+       ========================================================================== */
+    function loadSelectedExample() {
+      const idx = document.getElementById("exampleSelect").value;
+      if (idx !== "" && EXAMPLE_MESSAGES[idx]) {
+        const msg = EXAMPLE_MESSAGES[idx];
+        document.getElementById("manualSender").value = msg.sender;
+        document.getElementById("manualSubject").value = msg.subject;
+        document.getElementById("manualBody").value = msg.body;
+      }
+    }
+
+    function sendSelectedExample() {
+      const idx = document.getElementById("exampleSelect").value;
+      if (idx === "" || !EXAMPLE_MESSAGES[idx]) {
+        alert("먼저 드롭다운에서 테스트할 예제 메일을 선택하세요!");
+        return;
+      }
+      processIncomingMessage(EXAMPLE_MESSAGES[idx]);
+    }
+
+    function toggleAutoRun() {
+      isAutoRunActive = !isAutoRunActive;
+      const btn = document.getElementById("autoRunBtn");
+      const icon = document.getElementById("autoRunIcon");
+
+      if (isAutoRunActive) {
+        btn.classList.add("active");
+        icon.innerText = "⏸";
+        btn.innerHTML = `<span id="autoRunIcon">⏸</span> 자동 실행 가동 중...`;
+        runNextAutoSample();
+        autoRunTimer = setInterval(runNextAutoSample, 6000 / simSpeedMultiplier);
+      } else {
+        btn.classList.remove("active");
+        btn.innerHTML = `<span id="autoRunIcon">▶️</span> 자동 실행 (Auto-run)`;
+        if (autoRunTimer) clearInterval(autoRunTimer);
+      }
+    }
+
+    function runNextAutoSample() {
+      if (pendingCeoReview) {
+        const firstActId = Object.keys(currentTree.actions)[0];
+        resolveCeoDecision(firstActId, pendingCeoReview.msg, pendingCeoReview.evaluatedChain, pendingCeoReview.parcel);
+        return;
+      }
+      if (activeMailParcel) return;
+      const randIdx = Math.floor(Math.random() * EXAMPLE_MESSAGES.length);
+      document.getElementById("exampleSelect").value = randIdx;
+      processIncomingMessage(EXAMPLE_MESSAGES[randIdx]);
+    }
+
+    function submitManualMessage() {
+      const sender = document.getElementById("manualSender").value.trim();
+      const subject = document.getElementById("manualSubject").value.trim();
+      const body = document.getElementById("manualBody").value.trim();
+
+      if (!subject || !body) {
+        alert("제목과 내용을 입력해주세요.");
+        return;
+      }
+
+      closeModal("newMsgModal");
+      processIncomingMessage({
+        sender: sender || "guest@naver.com",
+        subject: subject,
+        body: body
+      });
+    }
+
+    /* ==========================================================================
+       14. CAMERA PRESETS & MODALS & RENDER LOOP
+       ========================================================================== */
+    function setCameraPreset(preset) {
+      if (preset === 'iso') {
+        animateCameraTo(18, 17, 20, 0, 1.2, 0);
+      } else if (preset === 'ceo') {
+        animateCameraTo(0, 5, -2, 0, 1.5, -6.8);
+      } else if (preset === 'chute') {
+        animateCameraTo(-6, 7, 10, -11, 2.5, 4);
+      } else if (preset === 'front') {
+        animateCameraTo(0, 10, 24, 0, 1.5, 0);
+      }
+    }
+
+    function animateCameraTo(cx, cy, cz, tx, ty, tz) {
+      const startPos = camera.position.clone();
+      const targetPos = new THREE.Vector3(cx, cy, cz);
+      const startTarget = controls.target.clone();
+      const targetLook = new THREE.Vector3(tx, ty, tz);
+
+      let p = 0;
+      function step() {
+        p += 0.05;
+        if (p > 1) p = 1;
+        camera.position.lerpVectors(startPos, targetPos, p);
+        controls.target.lerpVectors(startTarget, targetLook, p);
+        if (p < 1) requestAnimationFrame(step);
+      }
+      step();
+    }
+
+    function setSimSpeed(speed, btn) {
+      simSpeedMultiplier = speed;
+      localStorage.setItem("jev_sim_speed", speed);
+      if (!btn) {
+        btn = document.querySelector(`.speed-btn[onclick*="${speed}"]`);
+      }
+      if (btn) {
+        document.querySelectorAll(".speed-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      }
+    }
+
+    function switchTab(tabId, btn) {
+      if (!btn) {
+        btn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+      }
+      if (btn) {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      }
+
+      document.querySelectorAll(".tab-content").forEach(c => c.style.display = "none");
+      const target = document.getElementById(`tab-${tabId}`);
+      if (target) target.style.display = "block";
+
+      localStorage.setItem("jev_active_tab", tabId);
+
+      if (tabId === "tree") renderTreeNodesList();
+      if (tabId === "logs") renderLogsTable();
+    }
+
+    function toggleEngineMode() {
+      setMode(currentMode === "local" ? "demo" : "local");
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      localStorage.setItem("jev_engine_mode", mode);
+      const badge = document.getElementById("aiStatusBadge");
+      const text = document.getElementById("aiStatusText");
+      const demoBanner = document.getElementById("demoBanner");
+      const select = document.getElementById("modelSelect");
+      const model = select ? select.value : (localStorage.getItem("jev_selected_model") || "tev1:0.8b");
+
+      if (mode === "demo") {
+        badge.className = "status-badge demo-active";
+        text.innerText = "체험 모드 (로컬 시뮬레이션)";
+        demoBanner.style.display = "flex";
+      } else {
+        badge.className = "status-badge local-active";
+        if (model === "jev") {
+          const hasKey = !!localStorage.getItem("jev_api_key");
+          text.innerText = hasKey
+            ? "Jev 클라우드 API 실시간 연동 (jev)"
+            : "Jev 클라우드 (🔑 API 키 등록 필요)";
+        } else {
+          text.innerText = `로컬 Jev형 판단 엔진 실시간 연동 (${model})`;
+        }
+        demoBanner.style.display = "none";
+      }
+    }
+
+    function updateModelDropdownWithInstalled(models) {
+      installedLocalModels = (models || []).map(m => m.name);
+      console.log("ℹ️ 로컬 AI 실행 엔진 탐색 완료:", installedLocalModels);
+    }
+
+    async function testOllamaConnection() {
+      try {
+        const pingRes = await fetch("http://localhost:11434/api/tags");
+        if (pingRes.ok) {
+          const tagData = await pingRes.json();
+          if (tagData.models && tagData.models.length > 0) {
+            updateModelDropdownWithInstalled(tagData.models);
+          }
+          setMode("local");
+          const curModel = document.getElementById("modelSelect").value;
+          alert(`🟢 축하합니다! 로컬 판단 엔진에 성공적으로 연결되었습니다.\n현재 활성화된 판단 모델: [${curModel}]`);
+          return;
+        }
+      } catch (err) {
+        // Fallback
+      }
+      alert("⚠️ 연결 실패: 로컬 AI 엔진이 실행 중이지 않거나 브라우저 보안 제약이 있습니다.\n터미널에서 'python3 -m http.server 8888' 실행 후 http://localhost:8888 로 접속하세요.");
+      setMode("demo");
+    }
+
+    /* ==========================================================================
+       Jev API Key Management & Model Change Handlers
+       ========================================================================== */
+    function openJevApiKeyModal() {
+      const modal = document.getElementById("jevApiKeyModal");
+      if (!modal) return;
+      const keyInput = document.getElementById("jevApiKeyInput");
+      const epInput = document.getElementById("jevEndpointInput");
+      if (keyInput) keyInput.value = localStorage.getItem("jev_api_key") || "";
+      if (epInput) epInput.value = localStorage.getItem("jev_endpoint_url") || "https://api.jev.ai/v1/systemone";
+      modal.style.display = "flex";
+    }
+
+    function toggleJevKeyVisibility() {
+      const input = document.getElementById("jevApiKeyInput");
+      const btn = document.getElementById("jevKeyToggleBtn");
+      if (!input) return;
+      if (input.type === "password") {
+        input.type = "text";
+        if (btn) btn.innerText = "🔒 가리기";
+      } else {
+        input.type = "password";
+        if (btn) btn.innerText = "👁️ 보기";
+      }
+    }
+
+    function saveJevApiKey() {
+      const keyInput = document.getElementById("jevApiKeyInput");
+      const epInput = document.getElementById("jevEndpointInput");
+      const key = keyInput ? keyInput.value.trim() : "";
+      const ep = epInput && epInput.value.trim() ? epInput.value.trim() : "https://api.jev.ai/v1/systemone";
+
+      if (!key) {
+        alert("⚠️ Jev API 키를 입력해 주세요.\n(API 키가 없으시면 로컬 모델인 tev1:0.8b(권장) 또는 체험 모드를 이용하실 수 있습니다.)");
+        return;
+      }
+
+      localStorage.setItem("jev_api_key", key);
+      localStorage.setItem("jev_endpoint_url", ep);
+      updateJevKeyButtonState();
+      closeModal("jevApiKeyModal");
+      alert("✅ Jev API 인증 키가 안전하게 저장되었습니다.\n이제 'jev' 모델을 통한 클라우드 판단 엔진을 사용하실 수 있습니다.");
+
+      if (document.getElementById("modelSelect").value === "jev") {
+        setMode(currentMode);
+      }
+    }
+
+    function clearJevApiKey() {
+      if (confirm("정말 등록된 Jev API 키를 삭제하시겠습니까?")) {
+        localStorage.removeItem("jev_api_key");
+        const keyInput = document.getElementById("jevApiKeyInput");
+        if (keyInput) keyInput.value = "";
+        updateJevKeyButtonState();
+        alert("Jev API 키가 삭제되었습니다.");
+        if (document.getElementById("modelSelect").value === "jev") {
+          setMode(currentMode);
+        }
+      }
+    }
+
+    function updateJevKeyButtonState() {
+      const btn = document.getElementById("jevKeyBtn");
+      if (!btn) return;
+      const key = localStorage.getItem("jev_api_key");
+      if (key && key.length > 5) {
+        btn.innerText = "🔑 Jev API (등록됨)";
+        btn.style.background = "rgba(16, 185, 129, 0.15)";
+        btn.style.borderColor = "rgba(16, 185, 129, 0.4)";
+        btn.style.color = "#34d399";
+      } else {
+        btn.innerText = "🔑 Jev API 키";
+        btn.style.background = "rgba(251, 191, 36, 0.15)";
+        btn.style.borderColor = "rgba(251, 191, 36, 0.4)";
+        btn.style.color = "#fbbf24";
+      }
+    }
+
+    function onModelChange() {
+      const select = document.getElementById("modelSelect");
+      const model = select.value;
+      localStorage.setItem("jev_selected_model", model);
+      if (model === "jev") {
+        const key = localStorage.getItem("jev_api_key");
+        if (!key) {
+          alert("💡 'jev' 모델은 Jev API Key 인증이 필요합니다.\nAPI 키 설정 창에서 키를 입력해 주세요.");
+          openJevApiKeyModal();
+        }
+      }
+      setMode(currentMode);
+    }
+
+    function openNewMsgModal() { document.getElementById("newMsgModal").style.display = "flex"; }
+    function openOllamaGuide() { document.getElementById("ollamaGuideModal").style.display = "flex"; }
+    function openRationaleModal() { document.getElementById("rationaleModal").style.display = "flex"; }
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+    function copyText(str) {
+      navigator.clipboard.writeText(str).then(() => alert("클립보드에 복사되었습니다: " + str));
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Raycaster for clicking desks in 3D
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    renderer.domElement.addEventListener("click", (e) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      for (const hit of intersects) {
+        let cur = hit.object;
+        while (cur && cur !== scene) {
+          if (cur.userData && cur.userData.id) {
+            const deskId = cur.userData.id;
+            if (deskId === 'ceo') {
+              showDeskInfoModal({
+                avatar: '👑',
+                deptName: '대표이사 집무실 (CEO)',
+                employeeName: '대표 (나)',
+                taskType: '최종 의사결정 및 신뢰도 부족 안건 직접 검토/결재',
+                draftTemplate: '대표이사 직접 결재 건입니다.'
+              });
+            } else if (currentTree.actions[deskId]) {
+              showDeskInfoModal(currentTree.actions[deskId]);
+            }
+            return;
+          }
+          cur = cur.parent;
+        }
+      }
+    });
+
+    function showDeskInfoModal(desk) {
+      document.getElementById("deskModalTitle").innerText = `${desk.avatar || '🏢'} ${desk.deptName}`;
+      document.getElementById("deskModalBody").innerHTML = `
+        <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+          <p><strong>담당 캐릭터:</strong> ${desk.employeeName}</p>
+          <p style="margin-top: 4px;"><strong>주요 수행 업무:</strong> ${desk.taskType}</p>
+        </div>
+        <h4 style="font-size: 12px; font-weight: 700; color: #a5b4fc; margin-bottom: 6px;">기본 답변 초안 템플릿:</h4>
+        <div class="draft-speech-box">
+          "${desk.draftTemplate}"
+        </div>
+      `;
+      document.getElementById("deskInfoModal").style.display = "flex";
+    }
+
+    window.addEventListener("resize", () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+
+    /* ==========================================================================
+       15. ANIMATION LOOP & ACTIVE HIGHLIGHT BEAM UPDATE
+       ========================================================================== */
+    let clock = new THREE.Clock();
+
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+
+      const delta = Math.min(clock.getDelta(), 0.1);
+      physicsWorld.step(1 / 60 * simSpeedMultiplier);
+
+      for (const pair of physicsSyncPairs) {
+        pair.mesh.position.copy(pair.body.position);
+        pair.mesh.quaternion.copy(pair.body.quaternion);
+      }
+
+      // Active Highlight Beam & Ring Animation
+      if (activeHighlightGroup && activeHighlightGroup.visible) {
+        highlightRingMesh.rotation.z += 0.04;
+        highlightBeamMesh.material.opacity = 0.25 + Math.sin(performance.now() * 0.008) * 0.15;
+      }
+
+      const time = performance.now() * 0.003;
+      for (const char of charactersList) {
+        if (char.isJumping) {
+          char.jumpTimer--;
+          char.group.position.y = char.initialY + Math.abs(Math.sin(char.jumpTimer * 0.3)) * 0.45;
+          char.handL.position.y = 0.35 + Math.sin(char.jumpTimer * 0.5) * 0.2;
+          char.handR.position.y = 0.35 + Math.sin(char.jumpTimer * 0.5) * 0.2;
+          if (char.jumpTimer <= 0) {
+            char.isJumping = false;
+            char.group.position.y = char.initialY;
+          }
+        } else {
+          char.head.position.y = 1.05 + Math.sin(time + char.group.position.x) * 0.02;
+          if (char.isTyping) {
+            char.handL.position.z = 0.4 + Math.sin(time * 12) * 0.05;
+            char.handR.position.z = 0.4 - Math.sin(time * 12) * 0.05;
+          }
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // Initialize application
+    window.addEventListener("DOMContentLoaded", () => {
+      init3DOfficeEnvironment();
+      renderTreeNodesList();
+      renderLogsTable();
+      updateKpis();
+      animate3D();
+
+      // 1. Restore Model Selection
+      const savedModel = localStorage.getItem("jev_selected_model");
+      if (savedModel) {
+        const select = document.getElementById("modelSelect");
+        if (select && select.querySelector(`option[value="${savedModel}"]`)) {
+          select.value = savedModel;
+        }
+      }
+
+      // 2. Restore Jev API Key Button State
+      updateJevKeyButtonState();
+
+      // 3. Restore Sound Button UI
+      updateSoundButtonUI();
+
+      // 4. Restore Simulation Speed UI
+      const savedSpeed = parseFloat(localStorage.getItem("jev_sim_speed"));
+      if (savedSpeed) {
+        setSimSpeed(savedSpeed);
+      }
+
+      // 5. Restore Active Tab
+      const savedTab = localStorage.getItem("jev_active_tab");
+      if (savedTab && savedTab !== "canvas") {
+        switchTab(savedTab);
+      }
+
+      // 6. Restore / Initialize Engine Mode
+      const savedMode = localStorage.getItem("jev_engine_mode");
+      if (window.location.protocol === "file:") {
+        setMode("demo");
+        console.log("ℹ️ [NextAI] 로컬 파일(file://) 모드로 실행되었습니다.");
+        console.log("💡 로컬 Ollama 실시간 연동을 원하시면 http://localhost:8888 로 접속하세요.");
+      } else {
+        if (savedMode === "demo") {
+          setMode("demo");
+        } else {
+          // Check Ollama tags for local execution
+          fetch("http://localhost:11434/api/tags")
+            .then(res => {
+              if (res.ok) return res.json();
+              throw new Error("offline");
+            })
+            .then(data => {
+              if (data.models && data.models.length > 0) {
+                updateModelDropdownWithInstalled(data.models);
+              }
+              setMode(savedMode || "local");
+              console.log("🟢 [NextAI] 로컬 AI 판단 엔진과 실시간 연결되었습니다!");
+            })
+            .catch(() => {
+              const curModel = document.getElementById("modelSelect") ? document.getElementById("modelSelect").value : "";
+              if (curModel === "jev") {
+                setMode("local");
+              } else {
+                setMode("demo");
+              }
+            });
+        }
+      }
+    });
+  </script>
+</body>
+</html>

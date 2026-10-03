@@ -1,0 +1,3437 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 AI 1인 기업 (My AI-Run One-Person Company) - 로컬 AI 오피스</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0c0f17;
+      --bg-card: rgba(20, 26, 38, 0.88);
+      --bg-card-border: rgba(255, 255, 255, 0.08);
+      --bg-card-hover: rgba(30, 41, 59, 0.95);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.4);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.35);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.35);
+      --ceo-gold: #fbbf24;
+      --ceo-gold-glow: rgba(251, 191, 36, 0.45);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-ui: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      --font-pixel: 'Press Start 2P', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.1) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.06) 0%, transparent 60%);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Top Navigation Bar */
+    header {
+      background: rgba(12, 15, 23, 0.88);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--bg-card-border);
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #4f46e5, #ec4899);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .brand-info h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--bg-card-border);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .status-badge.local-active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      box-shadow: 0 0 12px var(--success-glow);
+    }
+
+    .status-badge.demo-active {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.5);
+      color: #fbbf24;
+      animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+      50% { box-shadow: 0 0 18px rgba(245, 158, 11, 0.6); }
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .model-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--bg-card-border);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .model-selector select {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .model-selector select option {
+      background: #181d26;
+      color: #fff;
+    }
+
+    button.btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--bg-card-border);
+      color: var(--text-main);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    button.btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    button.btn:active {
+      transform: translateY(0);
+    }
+
+    button.btn-primary {
+      background: linear-gradient(135deg, var(--primary), #818cf8);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    button.btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-hover), #6366f1);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+    }
+
+    button.btn-gold {
+      background: linear-gradient(135deg, #d97706, #fbbf24);
+      color: #111827;
+      font-weight: 700;
+      border: none;
+      box-shadow: 0 4px 14px var(--ceo-gold-glow);
+    }
+
+    button.btn-gold:hover {
+      background: linear-gradient(135deg, #b45309, #f59e0b);
+      color: #000;
+    }
+
+    /* KPI Stats Bar */
+    .kpi-container {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      padding: 14px 24px;
+      background: rgba(0, 0, 0, 0.28);
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .kpi-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary);
+    }
+
+    .kpi-card.kpi-cost::before { background: #10b981; }
+    .kpi-card.kpi-time::before { background: #38bdf8; }
+    .kpi-card.kpi-acc::before { background: #ec4899; }
+    .kpi-card.kpi-ceo::before { background: #fbbf24; }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .kpi-value {
+      font-family: var(--font-pixel);
+      font-size: 15px;
+      color: #fff;
+      letter-spacing: -0.5px;
+      margin-top: 4px;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* Main Workspace Layout */
+    .main-workspace {
+      display: grid;
+      grid-template-columns: minmax(680px, 1.35fr) minmax(420px, 1fr);
+      gap: 20px;
+      padding: 20px 24px;
+      flex: 1;
+    }
+
+    /* Left: Canvas Office & Quick Action Area */
+    .office-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .canvas-wrapper {
+      background: #111520;
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .canvas-header {
+      padding: 10px 16px;
+      background: rgba(17, 21, 32, 0.95);
+      border-bottom: 1px solid var(--bg-card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .canvas-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .canvas-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .speed-pill {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      border: 1px solid var(--bg-card-border);
+      overflow: hidden;
+    }
+
+    .speed-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .speed-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    #officeCanvas {
+      width: 100%;
+      height: 480px;
+      display: block;
+      image-rendering: pixelated;
+      background: #0d1117;
+      cursor: default;
+    }
+
+    /* Message Trigger Toolbar */
+    .control-toolbar {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 14px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+    }
+
+    .sample-select-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .custom-select {
+      flex: 1;
+      max-width: 320px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      color: var(--text-main);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .custom-select option {
+      background: #181d26;
+      color: #fff;
+    }
+
+    .action-button-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-auto-run.active {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 0 16px var(--success-glow);
+      animation: pulse-green 1.5s infinite;
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8); }
+    }
+
+    /* CEO Decision Alert Bar */
+    .ceo-alert-bar {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.16), rgba(245, 158, 11, 0.28));
+      border: 2px solid var(--ceo-gold);
+      border-radius: 14px;
+      padding: 14px 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 0 26px rgba(251, 191, 36, 0.4);
+      animation: bounce-subtle 1.2s infinite;
+    }
+
+    @keyframes bounce-subtle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .ceo-alert-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ceo-alert-icon {
+      font-size: 32px;
+      filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.6));
+    }
+
+    .ceo-alert-text h4 {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fbbf24;
+    }
+
+    .ceo-alert-text p {
+      font-size: 12px;
+      color: #e5e7eb;
+      margin-top: 2px;
+    }
+
+    .ceo-action-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .ceo-chip {
+      background: #1f2937;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .ceo-chip:hover {
+      background: var(--ceo-gold);
+      color: #111827;
+      transform: scale(1.05);
+    }
+
+    /* Right: Tabs & Inspector Column */
+    .inspector-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 580px;
+    }
+
+    .tabs-header {
+      display: flex;
+      background: rgba(15, 17, 23, 0.6);
+      border-bottom: 1px solid var(--bg-card-border);
+      padding: 0 8px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 14px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-content {
+      padding: 18px;
+      flex: 1;
+      overflow-y: auto;
+      max-height: calc(100vh - 240px);
+    }
+
+    /* Tab 1: Live Decision Inspector */
+    .msg-preview-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+
+    .msg-preview-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .msg-preview-subject {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .msg-preview-body {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .chain-path-banner {
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .path-steps {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .path-node-tag {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #e0e7ff;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .path-arrow {
+      color: var(--text-dim);
+      font-size: 10px;
+    }
+
+    /* Decision Questions Cards */
+    .question-eval-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      transition: all 0.3s;
+    }
+
+    .question-eval-card.active-step {
+      border-color: var(--primary);
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .question-eval-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .question-title-area h5 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .question-en-instruction {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .question-type-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    /* Probability Bars */
+    .prob-bar-row {
+      margin-top: 8px;
+    }
+
+    .prob-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+
+    .prob-opt-name {
+      font-weight: 600;
+      color: #d1d5db;
+    }
+
+    .prob-opt-value {
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      color: #fff;
+    }
+
+    .prob-track {
+      height: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .prob-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #38bdf8);
+      border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .prob-fill.winner {
+      background: linear-gradient(90deg, #10b981, #34d399);
+      box-shadow: 0 0 8px var(--success-glow);
+    }
+
+    /* Confidence Meter */
+    .confidence-meter-box {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .confidence-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .confidence-visual {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .conf-bar-track {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s;
+    }
+
+    .conf-badge {
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* Action Result Preview */
+    .action-result-box {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 95, 70, 0.15));
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 16px;
+    }
+
+    .action-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .action-avatar {
+      font-size: 24px;
+    }
+
+    .action-info h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #34d399;
+    }
+
+    .action-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .draft-speech-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #f3f4f6;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    /* Tab 2: Flow Tree Editor */
+    .tree-editor-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tree-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+
+    .tree-node-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .tree-node-card.question {
+      border-left: 4px solid var(--primary);
+    }
+
+    .tree-node-card.action {
+      border-left: 4px solid var(--success);
+    }
+
+    .tree-node-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .tree-node-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .branch-list {
+      margin-top: 8px;
+      padding-left: 12px;
+      border-left: 1px dashed rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .branch-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    /* Tab 3: Decision Log & Accuracy */
+    .log-stats-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .log-table th {
+      text-align: left;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--bg-card-border);
+    }
+
+    .log-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    .log-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .feedback-btn {
+      background: transparent;
+      border: 1px solid var(--bg-card-border);
+      border-radius: 4px;
+      padding: 3px 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .feedback-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .feedback-btn.active-correct {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: #10b981;
+      color: #10b981;
+    }
+
+    .feedback-btn.active-wrong {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #181d26;
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modal-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modal-pop {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--bg-card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 70vh;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--bg-card-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .cmd-box {
+      background: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #38bdf8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .cmd-copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    /* Badge on top for Demo Mode */
+    .demo-banner-alert {
+      background: linear-gradient(90deg, #d97706, #b45309);
+      color: #fff;
+      text-align: center;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 2px 10px rgba(217, 119, 6, 0.4);
+    }
+
+    .demo-banner-alert button {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Demo Mode Alert Banner -->
+  <div id="demoBanner" class="demo-banner-alert" style="display: none;">
+    <span>⚠️ <strong>체험 모드 (Demo Mode) 가동 중</strong> · 로컬 Ollama 미연결 상태 시뮬레이션입니다 (실제 AI 판정이 아님)</span>
+    <button onclick="openOllamaGuide()">Ollama 연결 가이드 보기</button>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-section">
+      <div class="brand-logo">🏢</div>
+      <div class="brand-info">
+        <h1>나의 AI 1인 기업 <span style="font-size: 12px; color: #a5b4fc; font-weight: normal;">My AI-Run One-Person Co.</span></h1>
+        <p>1인 CEO(대표) & 로컬 판단 AI 임직원들이 24시간 자율 운영하는 AI 에듀테크</p>
+      </div>
+      <div id="aiStatusBadge" class="status-badge local-active" onclick="toggleEngineMode()" title="클릭하여 실제 Ollama 모드 ↔ 체험 모드 전환">
+        <span class="status-dot"></span>
+        <span id="aiStatusText">로컬 Ollama 실시간 연동 (tev1:0.8b)</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Button to switch to 3D 4K Physics Version -->
+      <a href="index_3d.html" class="btn" style="background: linear-gradient(135deg, #ec4899, #8b5cf6); border-color: rgba(255, 255, 255, 0.3); color: #fff; font-weight: 700; text-decoration: none; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);">
+        🚀 3D 4K 물리엔진 버전 보기
+      </a>
+
+      <div class="model-selector">
+        <span>모델:</span>
+        <select id="modelSelect">
+          <option value="tev1:0.8b" selected>tev1:0.8b (권장)</option>
+          <option value="tev1">tev1 (풀버전)</option>
+          <option value="nimble">nimble</option>
+        </select>
+      </div>
+
+      <button class="btn" onclick="openOllamaGuide()">🔌 연결 설정</button>
+      <button class="btn" onclick="openRationaleModal()">💡 설계 의도</button>
+      <button id="soundToggleBtn" class="btn" onclick="toggleSound()">🔊 사운드 ON</button>
+      <button class="btn btn-gold" onclick="openNewMsgModal()">✉️ 메시지 전송</button>
+    </div>
+  </header>
+
+  <!-- KPI Top Stats Counters -->
+  <section class="kpi-container">
+    <div class="kpi-card">
+      <div class="kpi-label">📬 처리된 총 업무</div>
+      <div class="kpi-value" id="kpiTasksHandled">0건</div>
+      <div class="kpi-sub">수신 메일 자율 분기 및 초안 완료</div>
+    </div>
+    <div class="kpi-card kpi-time">
+      <div class="kpi-label">⚡️ 평균 의사결정 속도</div>
+      <div class="kpi-value" id="kpiAvgDecisionTime">0.00초</div>
+      <div class="kpi-sub">로컬 0.8b 초고속 추론 응답</div>
+    </div>
+    <div class="kpi-card kpi-cost">
+      <div class="kpi-label">💰 소모 인건비 및 API 비용</div>
+      <div class="kpi-value" id="kpiTotalCost">₩0</div>
+      <div class="kpi-sub">내 컴퓨터에서 100% 무료 연산</div>
+    </div>
+    <div class="kpi-card kpi-acc">
+      <div class="kpi-label">🎯 자동 처리 정확도</div>
+      <div class="kpi-value" id="kpiAccuracy">100%</div>
+      <div class="kpi-sub">대표 검수 피드백 기준 통계</div>
+    </div>
+    <div class="kpi-card kpi-ceo" id="kpiCeoCard">
+      <div class="kpi-label">👑 CEO 결재 대기</div>
+      <div class="kpi-value" id="kpiCeoPending">0건</div>
+      <div class="kpi-sub">신뢰도 부족 케이스 대표 컨펌</div>
+    </div>
+  </section>
+
+  <!-- Main Workspace -->
+  <main class="main-workspace">
+    <!-- Left: Canvas & Office Simulation -->
+    <div class="office-panel">
+      <!-- CEO Alert Bar (Appears when confidence < threshold) -->
+      <div id="ceoAlertBar" class="ceo-alert-bar">
+        <div class="ceo-alert-content">
+          <div class="ceo-alert-icon">👑</div>
+          <div class="ceo-alert-text">
+            <h4>[대표 결재 대기] AI 판단 신뢰도가 낮습니다! (<span id="ceoConfVal">0.42</span>)</h4>
+            <p id="ceoAlertMsgSummary">고객 문의가 모호하여 대표님의 최종 조치 결정이 필요합니다.</p>
+          </div>
+        </div>
+        <div class="ceo-action-chips" id="ceoActionChips">
+          <!-- Dynamically populated chips -->
+        </div>
+      </div>
+
+      <!-- Canvas Box -->
+      <div class="canvas-wrapper">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span>🕹️ 픽셀 아트 AI 오피스 본사 (Top-Down HQ)</span>
+            <span style="font-size: 11px; color: var(--text-dim);">[데스크를 클릭하면 해당 부서 상세정보를 확인합니다]</span>
+          </div>
+          <div class="canvas-controls">
+            <span style="font-size: 11px; color: var(--text-muted);">시뮬레이션 배속:</span>
+            <div class="speed-pill">
+              <button class="speed-btn active" onclick="setSimSpeed(1, this)">1x</button>
+              <button class="speed-btn" onclick="setSimSpeed(2, this)">2x</button>
+              <button class="speed-btn" onclick="setSimSpeed(4, this)">4x</button>
+            </div>
+            <button class="btn" style="padding: 3px 8px; font-size: 11px;" onclick="resetOfficeView()">화면 리셋</button>
+          </div>
+        </div>
+        <canvas id="officeCanvas" width="880" height="480"></canvas>
+      </div>
+
+      <!-- Quick Control Toolbar -->
+      <div class="control-toolbar">
+        <div class="sample-select-group">
+          <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">⚡️ 실무 예제 10선:</span>
+          <select id="exampleSelect" class="custom-select" onchange="loadSelectedExample()">
+            <option value="" disabled selected>테스트할 비즈니스 메일을 선택하세요...</option>
+            <option value="0">1. [표준 환불] 3일 전 결제 강의 수강 취소 및 전액 환불 요청</option>
+            <option value="1">2. [위급/분쟁] 카드 결제 2번 중복 청구! 당장 취소 안하면 신고</option>
+            <option value="2">3. [결제 문의] 회사 교육비 제출용 카드 영수증 및 사업자등록증</option>
+            <option value="3">4. [코드 버그] 5강 Colab 실습 중 CUDA Out of Memory 에러</option>
+            <option value="4">5. [접속 장애] 로그인 후 대시보드 500 내부 서버 에러 발생</option>
+            <option value="5">6. [대형 특강] 삼성전자 AI연구소 50명 실전 에이전트 특강 출강</option>
+            <option value="6">7. [PPL 협찬] AI 생산성 툴 유튜브 60초 광고 스폰서십 제안서</option>
+            <option value="7">8. [학습 질문] Transformer Multi-Head Attention 수식 및 차원</option>
+            <option value="8">9. [모호/CEO] 환불을 해주시든가 아님 같이 동업해서 강의 찍어요</option>
+            <option value="9">10. [잡담/스팸] 영상 잘 보고 있어요! 타건 소리 좋은 키보드 뭐예요?</option>
+          </select>
+          <button class="btn btn-primary" onclick="sendSelectedExample()">우체통 투입 📬</button>
+        </div>
+
+        <div class="action-button-group">
+          <button id="autoRunBtn" class="btn btn-auto-run" onclick="toggleAutoRun()">
+            <span id="autoRunIcon">▶️</span> 자동 실행 (Auto-run)
+          </button>
+          <button class="btn" onclick="openNewMsgModal()">직접 작성</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Decision Inspector & Tree Editor & Logs -->
+    <div class="inspector-panel">
+      <!-- Tabs Header -->
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab('inspector', this)">🔍 실시간 판단 인스펙터</button>
+        <button class="tab-btn" onclick="switchTab('tree', this)">🌳 의사결정 트리 편집기</button>
+        <button class="tab-btn" onclick="switchTab('logs', this)">📋 판단 로그 & 피드백</button>
+      </div>
+
+      <!-- Tab 1: Live Decision Inspector -->
+      <div id="tab-inspector" class="tab-content">
+        <!-- Message Summary Card -->
+        <div class="msg-preview-card">
+          <div class="msg-preview-meta">
+            <span id="inspSender">발신자: 수신 대기 중</span>
+            <span id="inspTime">방금</span>
+          </div>
+          <div class="msg-preview-subject" id="inspSubject">현재 처리 중인 메시지가 없습니다.</div>
+          <div class="msg-preview-body" id="inspBody">아래 '실무 예제 10선'을 선택하거나 '메시지 전송' 버튼을 눌러 로컬 AI의 실시간 판단 체인을 가동하세요.</div>
+        </div>
+
+        <!-- Trajectory Path Banner -->
+        <div class="chain-path-banner">
+          <span style="font-size: 11px; font-weight: 700; color: #a5b4fc;">📍 의사결정 체인 이동 경로 (Decision Trajectory):</span>
+          <div class="path-steps" id="trajectorySteps">
+            <span class="path-node-tag">📬 우체통 수신</span>
+            <span class="path-arrow">➜</span>
+            <span class="path-node-tag" style="opacity: 0.5;">대기 중...</span>
+          </div>
+        </div>
+
+        <!-- Step-by-Step Questions Evaluations -->
+        <div id="questionsEvalContainer">
+          <div style="text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 12px;">
+            메시지가 도착하면 질문별 확률 분포 바와 신뢰도 게이지가 실시간으로 나타납니다.
+          </div>
+        </div>
+
+        <!-- Action Result Box -->
+        <div id="actionResultContainer" style="display: none;">
+          <div class="action-result-box">
+            <div class="action-header">
+              <div class="action-avatar" id="actAvatar">🤖</div>
+              <div class="action-info">
+                <h4 id="actDeptName">담당 부서: 결제/환불팀 (페이봇)</h4>
+                <p id="actTaskType">수행 업무: 표준 환불 규정 안내 및 회신 초안 작성</p>
+              </div>
+            </div>
+            <div style="font-size: 11px; font-weight: 700; color: #a7f3d0; margin-top: 6px;">📝 AI 작성 답변 초안 (Speech Draft):</div>
+            <div class="draft-speech-box" id="actSpeechDraft">
+              "안녕하세요 수강생님! 결제 후 7일 이내 및 미수강 조건이 확인되어 240,000원 전액 환불 접수가 완료되었습니다..."
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Decision Tree Editor -->
+      <div id="tab-tree" class="tab-content" style="display: none;">
+        <div class="tree-editor-container">
+          <div class="tree-toolbar">
+            <div>
+              <h4 style="font-size: 13px; font-weight: 700;">의사결정 체인 & 부서 구조</h4>
+              <p style="font-size: 11px; color: var(--text-muted);">새 액션을 추가하면 오피스에 신규 AI 직원 데스크가 자동 생성됩니다.</p>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="exportTreeJson()">JSON 내보내기</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="triggerImportTree()">JSON 불러오기</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 11px; color: #f87171;" onclick="resetTreeToDefault()">기본값 복원</button>
+              <input type="file" id="treeFileInput" accept=".json" style="display: none;" onchange="importTreeJson(event)">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="openAddQuestionModal()">+ 새 질문 노드 추가</button>
+            <button class="btn btn-gold" style="font-size: 11px; padding: 6px 12px;" onclick="openAddActionModal()">+ 새 액션(직원 데스크) 추가</button>
+          </div>
+
+          <!-- Tree Visual List -->
+          <div id="treeNodesList"></div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Decision Log & Accuracy -->
+      <div id="tab-logs" class="tab-content" style="display: none;">
+        <div class="log-stats-bar">
+          <div>
+            <span style="font-weight: 700; color: #fff;">누적 판정 기록</span>
+            <span style="color: var(--text-muted); font-size: 11px;" id="logCountLabel">(총 0건)</span>
+          </div>
+          <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="exportLogsJson()">📥 로그 JSON 내보내기 (재학습용)</button>
+        </div>
+
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>시간</th>
+              <th>발신자 / 제목</th>
+              <th>경로 / 신뢰도</th>
+              <th>최종 액션</th>
+              <th>평가</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 30px;">
+                아직 처리된 의사결정 로그가 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: Department Desk Inspector -->
+  <div id="deskInfoModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="deskModalTitle">🏢 부서 정보</h3>
+        <button class="modal-close-btn" onclick="closeModal('deskInfoModal')">✕</button>
+      </div>
+      <div class="modal-body" id="deskModalBody">
+        <!-- populated on click -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('deskInfoModal')">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Ollama Connection Guide -->
+  <div id="ollamaGuideModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🔌 로컬 Ollama 0.35+ 연결 설정 가이드</h3>
+        <button class="modal-close-btn" onclick="closeModal('ollamaGuideModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #e5e7eb; margin-bottom: 12px;">
+          본 시스템은 Ollama 0.35+ 신규 기능인 <code>POST /v1/systemone</code> 규격을 완벽하게 준수하여 작동합니다.
+        </p>
+
+        <h4 style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-top: 14px;">1. 모델 다운로드 (터미널)</h4>
+        <div class="cmd-box">
+          <span>ollama pull tev1:0.8b</span>
+          <button class="cmd-copy-btn" onclick="copyText('ollama pull tev1:0.8b')">복사</button>
+        </div>
+
+        <h4 style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-top: 14px;">2. 브라우저 CORS 허용 실행 (중요!)</h4>
+        <p style="font-size: 11px; color: var(--text-muted);">
+          웹 브라우저에서 로컬호스트(localhost:11434)에 직접 보안 요청을 보내려면 반드시 <code>OLLAMA_ORIGINS="*"</code> 환경변수를 설정하고 실행해야 합니다:
+        </p>
+        <div class="cmd-box">
+          <span>OLLAMA_ORIGINS="*" ollama serve</span>
+          <button class="cmd-copy-btn" onclick="copyText('OLLAMA_ORIGINS=&quot;*&quot; ollama serve')">복사</button>
+        </div>
+        <p style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">
+          ※ Mac/Linux 터미널에서 위 명령어를 입력하여 Ollama를 켜두세요.
+        </p>
+
+        <h4 style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-top: 14px;">3. 엔드포인트 규격</h4>
+        <p style="font-size: 11px; color: var(--text-muted);">
+          URL: <code>http://localhost:11434/v1/systemone</code> (JSON POST)<br>
+          영어 Instructions & Criteria를 사용하여 0.8B 모델에서도 최고의 분류 정확도를 발휘합니다.
+        </p>
+
+        <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px; margin-top: 14px;">
+          <strong style="color: #fbbf24; font-size: 12px;">💡 현재 Ollama가 설치되지 않았거나 오프라인인가요?</strong>
+          <p style="font-size: 11px; color: #d1d5db; margin-top: 4px;">
+            '체험 모드(Demo Mode)'로 전환하시면 실제 API 통신 없이도 100% 동일한 픽셀 오피스 애니메이션과 의사결정 체인 시뮬레이션을 즉시 체험하실 수 있습니다.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="setMode('demo'); closeModal('ollamaGuideModal');">체험 모드로 전환</button>
+        <button class="btn btn-primary" onclick="setMode('local'); testOllamaConnection();">로컬 연결 확인 및 적용</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Design Rationale (설계 의도) -->
+  <div id="rationaleModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>💡 AI 에듀테크 1인 기업 의사결정 체인 설계 의도</h3>
+        <button class="modal-close-btn" onclick="closeModal('rationaleModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="color: #a5b4fc; font-size: 14px; margin-bottom: 8px;">1. 비즈니스 모델 & 1인 기업가의 핵심 고충</h4>
+        <p style="font-size: 12px; color: #d1d5db; margin-bottom: 12px;">
+          본 회사는 <strong>YouTube 무료 강의로 수강생을 모으고, 심화 온라인 코스와 유료 멘토링을 판매하는 1인 AI 에듀테크</strong>입니다.
+          대표 혼자서 강의 기획, 영상 제작, 연구를 병행해야 하므로 <strong>매일 쏟아지는 수십 건의 이메일과 댓글을 직접 분류하고 응대하는 것은 물리적으로 불가능</strong>합니다.
+        </p>
+
+        <h4 style="color: #a5b4fc; font-size: 14px; margin-bottom: 8px;">2. 왜 이런 다단계 체인(Chain)으로 설계했는가?</h4>
+        <ul style="font-size: 12px; color: #d1d5db; padding-left: 18px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <li>
+            <strong>1단계 <code>category</code> (Choice) 분기:</strong>
+            메시지를 '결제/환불(billing)', '기술오류(tech)', '기업제휴(partnership)', '학습질문(mentoring)' 4대 전문 영역으로 1차 격리하여 환각(Hallucination) 위험을 최소화합니다.
+          </li>
+          <li>
+            <strong>2단계 <code>is_refund</code> (Noul Yes/No) 분기:</strong>
+            결제 문의 중 '단순 영수증 발행'과 '환불 요구'는 법적/재무적 중요도가 완전히 다릅니다. Noul 70% 임계치로 명시적 환불을 정확히 검출합니다.
+          </li>
+          <li>
+            <strong>3단계 <code>refund_urgency</code> (Score) 분기:</strong>
+            카드사 분쟁 신고나 소비자원 경고가 포함된 고위험 건은 레벨 1~2로 평가하여 '골드봇(재무리스크팀)'이 즉시 승인 취소와 맞춤형 사과 초안을 작성합니다.
+          </li>
+          <li>
+            <strong>4단계 <code>deal_scale</code> (Score) 분기:</strong>
+            1인 기업의 주 수익원이 되는 대기업 사내특강(대형 건)은 자동으로 대표 직행 안건으로 분류되어 캘린더 미팅 초안이 상정됩니다.
+          </li>
+          <li>
+            <strong>신뢰도 부족 시 👑 CEO 직행 (Fail-safe):</strong>
+            판단 신뢰도(Confidence)가 50% 미만인 애매한 문의는 AI가 멋대로 답변하지 않고 즉시 대표 책상으로 상정되어 고객 응대 사고를 100% 원천 차단합니다.
+          </li>
+        </ul>
+
+        <h4 style="color: #a5b4fc; font-size: 14px; margin-bottom: 8px;">3. 프롬프트 언어 최적화 원칙</h4>
+        <p style="font-size: 12px; color: #d1d5db;">
+          화면 UI는 한국어로 친근하게 제공하지만, Ollama <code>tev1:0.8b</code> 및 경량 모델의 성능을 극대화하기 위해 모델로 전송되는 <code>instructions</code>와 <code>criteria</code>는 엄밀한 영어(English)로 전송하도록 설계되었습니다.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('rationaleModal')">이해했습니다</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: New Message Compose -->
+  <div id="newMsgModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>✉️ 새 고객 메시지 수신 및 판단 요청</h3>
+        <button class="modal-close-btn" onclick="closeModal('newMsgModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>발신자 (이메일/이름)</label>
+          <input type="text" id="manualSender" class="form-control" placeholder="example@naver.com (홍길동)" value="user123@gmail.com (수강생 김민우)">
+        </div>
+        <div class="form-group">
+          <label>메일 제목</label>
+          <input type="text" id="manualSubject" class="form-control" placeholder="문의 제목을 입력하세요" value="[환불 문의] 강의 수강 전액 환불 요청드립니다.">
+        </div>
+        <div class="form-group">
+          <label>본문 내용</label>
+          <textarea id="manualBody" class="form-control" placeholder="고객 문의 본문을 입력하세요">결제한 지 2일 지났고 아직 1강도 안 들었습니다. 회사 업무 변경으로 들을 시간이 없어서 전액 환불 희망합니다. 주문번호: 2026-90412</textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('newMsgModal')">취소</button>
+        <button class="btn btn-primary" onclick="submitManualMessage()">우체통으로 투입 📬</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Question Node -->
+  <div id="addQuestionModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>+ 새 의사결정 질문(Question) 추가</h3>
+        <button class="modal-close-btn" onclick="closeModal('addQuestionModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>질문 고유 ID (영문)</label>
+          <input type="text" id="newQId" class="form-control" placeholder="예: vip_check">
+        </div>
+        <div class="form-group">
+          <label>질문 한국어 이름 (UI 표시용)</label>
+          <input type="text" id="newQNameKo" class="form-control" placeholder="예: VIP 고객 여부 확인">
+        </div>
+        <div class="form-group">
+          <label>질문 유형 (Type)</label>
+          <select id="newQType" class="form-control">
+            <option value="choice">choice (다중 선택형)</option>
+            <option value="noul">noul (Yes / No 판단형)</option>
+            <option value="score">score (점수/위급도 단계형)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>영문 Instructions (Ollama 모델 지시문)</label>
+          <input type="text" id="newQInst" class="form-control" placeholder="Is this user an existing enterprise subscriber?">
+        </div>
+        <div class="form-group">
+          <label>최소 신뢰도 임계치 (Confidence Threshold, 기본 0.50)</label>
+          <input type="number" id="newQThreshold" class="form-control" min="0.1" max="0.99" step="0.05" value="0.50">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('addQuestionModal')">취소</button>
+        <button class="btn btn-primary" onclick="saveNewQuestion()">질문 생성</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Action Node -->
+  <div id="addActionModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>+ 새 조치 액션 & 직원 데스크 생성</h3>
+        <button class="modal-close-btn" onclick="closeModal('addActionModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>액션 고유 ID (영문)</label>
+          <input type="text" id="newActId" class="form-control" placeholder="예: action_career_consult">
+        </div>
+        <div class="form-group">
+          <label>부서명 & 담당 캐릭터 이름</label>
+          <input type="text" id="newActDept" class="form-control" placeholder="예: 🚀 커리어팀 (커리어봇)">
+        </div>
+        <div class="form-group">
+          <label>수행 업무 내용 (Task)</label>
+          <input type="text" id="newActTask" class="form-control" placeholder="예: 이력서 첨삭 가이드 및 1:1 상담 예약 링크 회신">
+        </div>
+        <div class="form-group">
+          <label>캐릭터 테마 색상</label>
+          <select id="newActColor" class="form-control">
+            <option value="#ec4899">핑크 (Pink)</option>
+            <option value="#f97316">오렌지 (Orange)</option>
+            <option value="#8b5cf6">퍼플 (Purple)</option>
+            <option value="#06b6d4">민트 (Mint)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>기본 답변 초안 템플릿</label>
+          <textarea id="newActTemplate" class="form-control" placeholder="고객에게 전송할 회신 초안 템플릿을 입력하세요"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('addActionModal')">취소</button>
+        <button class="btn btn-primary" onclick="saveNewAction()">데스크 & 직원 생성</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC & PIXEL ENGINE -->
+  <script>
+    /* ==========================================================================
+       1. DATA STRUCTURES & DEFAULT EXPERT DECISION CHAIN
+       ========================================================================== */
+    const DEFAULT_DECISION_TREE = {
+      rootQuestionId: "category",
+      questions: {
+        "category": {
+          id: "category",
+          nameKo: "1차 문의 부서 분류",
+          type: "choice",
+          instructions: "Classify incoming email into the primary operational department.",
+          criteria: {
+            "billing": "Payments, purchases, receipts, invoices, and refund requests",
+            "technical": "Code bugs, login issues, video playback errors, Colab environment setup",
+            "partnership": "Corporate training workshops, speaker invitations, YouTube sponsorships, and business collaboration",
+            "mentoring": "Course content questions, AI theoretical advice, and career coaching"
+          },
+          threshold: 0.50,
+          routes: {
+            "billing": { type: "question", target: "is_refund" },
+            "technical": { type: "question", target: "issue_type" },
+            "partnership": { type: "question", target: "deal_scale" },
+            "mentoring": { type: "action", target: "action_mentoring" }
+          }
+        },
+        "is_refund": {
+          id: "is_refund",
+          nameKo: "명시적 환불 요청 여부",
+          type: "noul",
+          instructions: "Does the customer explicitly demand or ask for a refund or money back?",
+          threshold: 0.70, // 70% yes threshold
+          routes: {
+            "yes": { type: "question", target: "refund_urgency" },
+            "no": { type: "action", target: "action_billing_receipt" }
+          }
+        },
+        "refund_urgency": {
+          id: "refund_urgency",
+          nameKo: "환불 리스크 및 분쟁 긴급도",
+          type: "score",
+          instructions: "Assess the financial urgency and dispute risk of this refund request.",
+          criteria: [
+            "Routine refund request within standard 7-day policy",
+            "High priority with double billing or card cancellation dispute",
+            "Critical urgent legal complaint or consumer protection report"
+          ],
+          threshold: 0.50,
+          routes: {
+            "0": { type: "action", target: "action_standard_refund" },
+            "1": { type: "action", target: "action_urgent_refund" },
+            "2": { type: "action", target: "action_urgent_refund" }
+          }
+        },
+        "issue_type": {
+          id: "issue_type",
+          nameKo: "기술 장애 유형 식별",
+          type: "choice",
+          instructions: "Identify the specific technical issue reported.",
+          criteria: {
+            "code_bug": "Python, PyTorch, Colab scripts, package dependencies, or lecture code bugs",
+            "platform_access": "Cannot log in, video buffering, LMS portal crash, or account activation issue"
+          },
+          threshold: 0.50,
+          routes: {
+            "code_bug": { type: "action", target: "action_code_debug" },
+            "platform_access": { type: "action", target: "action_platform_support" }
+          }
+        },
+        "deal_scale": {
+          id: "deal_scale",
+          nameKo: "비즈니스 제휴 규모 평가",
+          type: "score",
+          instructions: "Evaluate the strategic budget tier and company scale of this partnership offer.",
+          criteria: [
+            "Small sponsorship or free product gift",
+            "Mid-tier startup collaboration or webinar invitation",
+            "Large enterprise keynote lecture or massive annual sponsorship"
+          ],
+          threshold: 0.50,
+          routes: {
+            "0": { type: "action", target: "action_standard_sponsor" },
+            "1": { type: "action", target: "action_standard_sponsor" },
+            "2": { type: "action", target: "action_ceo_keynote" }
+          }
+        }
+      },
+      actions: {
+        "action_standard_refund": {
+          id: "action_standard_refund",
+          deptName: "💳 결제/환불팀 (페이봇)",
+          employeeName: "페이봇",
+          taskType: "표준 환불 규정 안내 및 회신 초안 작성",
+          avatar: "🤖",
+          color: "#38bdf8",
+          deskX: 190,
+          deskY: 170,
+          draftTemplate: "안녕하세요 수강생님, NextAI 에듀팀입니다. 결제하신 강의의 전액 환불 접수가 정상 완료되었습니다. 카드사 영업일 기준 3~5일 내에 결제 승인 취소가 반영될 예정입니다."
+        },
+        "action_urgent_refund": {
+          id: "action_urgent_refund",
+          deptName: "🛡 긴급재무리스크팀 (골드봇)",
+          employeeName: "골드봇",
+          taskType: "즉시 승인 취소 연동 및 대표 결재 사과문 초안",
+          avatar: "🚨",
+          color: "#ef4444",
+          deskX: 190,
+          deskY: 340,
+          draftTemplate: "수강생님 대단히 죄송합니다. 결제 시스템 상의 중복 승인 오류를 확인하여 즉시 카드사 승인 취소 및 이중 출금액 환급 조치를 완료하였습니다. 대표이사 명의의 정중한 사과와 함께 멤버십 1개월 무료 연장 혜택을 제공해 드립니다."
+        },
+        "action_billing_receipt": {
+          id: "action_billing_receipt",
+          deptName: "💳 결제지원팀 (페이봇)",
+          employeeName: "페이봇",
+          taskType: "영수증/세금계산서 발행 및 수강증 첨부 회신",
+          avatar: "🧾",
+          color: "#38bdf8",
+          deskX: 190,
+          deskY: 170,
+          draftTemplate: "안녕하세요! 요청하신 법인 교육비 증빙용 카드 매출전표와 사업자등록증 사본, 그리고 수강확인증 PDF 문서를 메일로 첨부해 드립니다. 세무 증빙 처리에 도움되시길 바랍니다."
+        },
+        "action_code_debug": {
+          id: "action_code_debug",
+          deptName: "🛠 코드디버그팀 (코드봇)",
+          employeeName: "코드봇",
+          taskType: "Colab 코드 재현 및 OOM 회피 가이드 스니펫 제공",
+          avatar: "💻",
+          color: "#10b981",
+          deskX: 440,
+          deskY: 170,
+          draftTemplate: "안녕하세요 수강생님! Colab T4 무료 GPU 환경에서 OOM이 발생하는 원인은 attention caching 크기 때문입니다. batch_size를 2로 줄이고 gradient_accumulation_steps=4를 추가한 해결 코드 스니펫을 공유해 드립니다."
+        },
+        "action_platform_support": {
+          id: "action_platform_support",
+          deptName: "🖥 시스템운영팀 (서버봇)",
+          employeeName: "서버봇",
+          taskType: "500 에러 캐시 플러시 및 세션 계정 즉시 복구",
+          avatar: "⚙️",
+          color: "#eab308",
+          deskX: 440,
+          deskY: 340,
+          draftTemplate: "안녕하세요 수강생님, 일시적인 CDN 캐시 동기화 오류로 확인되었습니다. 수강생님의 대시보드 권한을 즉각 재활성화하였으며, 수강 시청 기한을 7일 무료 연장해 드렸습니다."
+        },
+        "action_standard_sponsor": {
+          id: "action_standard_sponsor",
+          deptName: "🤝 파트너십팀 (파트너봇)",
+          employeeName: "파트너봇",
+          taskType: "유튜브 미드롤 PPL 단가표 및 일정 브로슈어 송부",
+          avatar: "💼",
+          color: "#a855f7",
+          deskX: 680,
+          deskY: 170,
+          draftTemplate: "안녕하세요 담당자님, NextAI 채널과의 스폰서십 제안에 감사드립니다. 60초 미드롤 협찬 단가표 및 2026년 상반기 콘텐츠 편성 일정을 첨부해 드립니다. 희망하시는 업로드 일정을 회신해 주시면 진행을 도와드리겠습니다."
+        },
+        "action_ceo_keynote": {
+          id: "action_ceo_keynote",
+          deptName: "👑 전략제휴팀 (비즈봇)",
+          employeeName: "비즈봇",
+          taskType: "사내특강 제안 요약 및 CEO 직행 캘린더 미팅 조율",
+          avatar: "🏆",
+          color: "#fbbf24",
+          deskX: 680,
+          deskY: 340,
+          draftTemplate: "안녕하세요 교육담당자님! 대기업 대상 생성형 AI 특강 출강 제안에 깊이 감사드립니다. 요청하신 커리큘럼(4시간)과 강사료 견적서를 조율하기 위해 대표님과 직접 줌(Zoom) 미팅을 예약하실 수 있는 캘린더 링크를 안내해 드립니다."
+        },
+        "action_mentoring": {
+          id: "action_mentoring",
+          deptName: "🎓 학습코칭팀 (튜터봇)",
+          employeeName: "튜터봇",
+          taskType: "이론 수식 해설 및 논문/진로 참고자료 링크 회신",
+          avatar: "📚",
+          color: "#06b6d4",
+          deskX: 560,
+          deskY: 255,
+          draftTemplate: "안녕하세요 수강생님! Attention 수식에서 d_k의 제곱근으로 나누는 이유는 내적 값이 너무 커지면 softmax 함수의 기울기가 0으로 수렴(vanishing)하는 것을 방지하기 위함입니다. 상세 유도 과정을 정리한 블로그 링크를 함께 드립니다."
+        }
+      }
+    };
+
+    // 10 Realistic Korean Company Examples
+    const EXAMPLE_MESSAGES = [
+      {
+        sender: "user_kim@naver.com (김도현)",
+        subject: "[환불 문의] 파이썬 실전 강의 전액 환불 요청드립니다",
+        body: "안녕하세요 대표님, 어제 결제한 '실전 LLM 에이전트 구축 부트캠프' 강의인데요. 강의 목차를 다시 살펴보니 제가 원하던 분야와 조금 달라서 아직 1강도 수강하지 않은 상태입니다. 결제 금액 240,000원 전액 환불 가능할까요? 결제번호는 2026-99381-KR 입니다."
+      },
+      {
+        sender: "park_angry@daum.net (박지민)",
+        subject: "[긴급/화남] 카드 결제 2번 중복 청구됐습니다!! 즉시 조치 요망",
+        body: "지금 카드 승인 내역 확인했는데 월간 멤버십 비용(49,000원)이 1분 간격으로 두 번이나 결제되었습니다! 이게 무슨 일인가요? 오늘 중으로 즉시 승인 취소 안 해주시면 카드사에 분쟁 조정 신청하고 소비자원에도 신고 접수하겠습니다. 빠른 회신 바랍니다."
+      },
+      {
+        sender: "sujin_lee@hyundai.com (이수진)",
+        subject: "[영수증/세금계산서] 회사 제출용 결제 영수증 발행 요청의 건",
+        body: "대표님 안녕하세요, 회사 자기계발 지원금으로 강의를 수강 중인 수강생 이수진입니다. 회사 회계팀에 제출할 카드 매출전표와 사업자등록증 사본, 그리고 수강확인서 양식이 필요한데 메일로 송부해주실 수 있을까요? 사업자번호: 120-88-99123"
+      },
+      {
+        sender: "coder_won@gmail.com (최원석)",
+        subject: "[코드 질문] 4장 Colab 실습 중 CUDA Out of Memory 에러 발생",
+        body: "강의 4강 파인튜닝 실습 중 Colab 무료 T4 GPU에서 배치 사이즈를 4로 설정했는데도 계속 CUDA out of memory 에러가 발생하면서 커널이 죽습니다. gradient accumulation steps를 적용해야 할까요? 제가 수정한 스크립트 코드 첨부드립니다."
+      },
+      {
+        sender: "hyeonwoo@kakao.com (정현우)",
+        subject: "[접속 장애] 로그인 후 대시보드 화면이 흰색으로만 나옵니다 (500 Error)",
+        body: "크롬 브라우저에서 로그인 버튼을 누르면 '서버 내부 오류(500)'가 뜨면서 수강 대시보드로 이동하지 않습니다. 시크릿 모드에서도 동일한 증상이 반복됩니다. 오늘 강의 수강 마감일인데 확인 부탁드립니다."
+      },
+      {
+        sender: "taeyang.han@mobis.co.kr (한태양 책임)",
+        subject: "[특강 의뢰] 임직원 대상 생성형 AI 활용 오프라인 특강 출강 제안",
+        body: "안녕하세요 대표님, 현대모비스 R&D 인재개발팀 한태양 책임입니다. 유튜브에서 올려주신 엔터프라이즈 AI 에이전트 실전 강의를 감명 깊게 보았습니다. 4월 중 사내 AI 연구원 및 기획자 80명을 대상으로 4시간 분량의 특강을 모시고자 합니다. 강사료 견적 및 출강 가능 일정을 문의드립니다."
+      },
+      {
+        sender: "biz@promptworks.ai (마케팅팀)",
+        subject: "[협찬/광고] 유튜브 채널 영상 내 60초 광고 스폰서십 제안서",
+        body: "대표님 안녕하세요! AI 코딩 어시스턴트 서비스 '코파일럿X'의 마케팅 담당자입니다. 대표님 유튜브 채널의 개발자 구독자층과 당사 타겟이 정확히 일치하여, 5월 업로드 예정 영상에 60초 미드롤 협찬을 진행하고 싶습니다. PPL 광고 단가표와 진행 프로세스 회신 부탁드립니다."
+      },
+      {
+        sender: "minkyeong@snu.ac.kr (송민경)",
+        subject: "[질문/진로] 트랜스포머 Attention 차원 수식 관련 질문 및 대학원 진로 고민",
+        body: "강의 2장 Self-Attention 수식에서 Q와 K의 전치 행렬 곱 연산 시 d_k로 나누어주는 스케일링 팩터의 수학적 증명에 대해 질문이 있습니다. softmax 입력이 커지면 gradient vanishing이 일어나는 것까지는 이해했는데... 그리고 비전공자로서 AI 연구실 대학원 진학을 준비할 때 필수적인 선수 과목도 조언을 얻고 싶습니다."
+      },
+      {
+        sender: "confused_user@hanmail.net (의문자)",
+        subject: "강의가 이상한데 환불을 해주시든가 아니면 저랑 동업해서 강좌 다시 찍으실래요?",
+        body: "강의 샀는데 내용이 너무 빨라서 반은 알아듣고 반은 모르겠네요. 이거 환불 가능한가요? 아님 제가 학원 강사 출신인데 저랑 같이 파트너십 맺고 초보자용 강의 새로 런칭하실 생각 있으신가요? 연락 주세요."
+      },
+      {
+        sender: "fan_boy99@naver.com (애청자)",
+        subject: "유튜브 잘 보고 있습니다 ㅎㅎ 질문 하나만 드려도 될까요?",
+        body: "안녕하세요 대표님 영상 매일 챙겨보고 있는 애청자입니다! 그냥 너무 감사해서 인사 남겨요. 혹시 영상에서 사용하시는 기계식 키보드랑 모니터 제품명이 뭔가요? 영상에서 타건 소리가 너무 좋아서요 ㅎㅎ"
+      }
+    ];
+
+    /* ==========================================================================
+       2. STATE & CONFIGURATION
+       ========================================================================== */
+    let currentTree = loadDecisionTree();
+    let currentMode = "local"; // "local" or "demo"
+    let isSoundEnabled = true;
+    let simSpeedMultiplier = 1;
+    let isAutoRunActive = false;
+    let autoRunTimer = null;
+    let pendingCeoReview = null;
+
+    let hoveredDesk = null;
+
+    // Statistics
+    let stats = {
+      tasksHandled: 0,
+      totalDecisionMs: 0,
+      accuracyEvaluations: [],
+      logs: []
+    };
+
+    try {
+      const savedLogs = localStorage.getItem("my_ai_company_logs");
+      if (savedLogs) stats.logs = JSON.parse(savedLogs);
+      stats.tasksHandled = stats.logs.length;
+    } catch (e) {}
+
+    /* ==========================================================================
+       3. RETRO WEB AUDIO API SOUND SYSTEM
+       ========================================================================== */
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(type) {
+      if (!isSoundEnabled) return;
+      try {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+
+        if (type === 'mail') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(587.33, now); // D5
+          osc.frequency.setValueAtTime(880, now + 0.08); // A5
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'tick') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(440, now);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'ceo_alert') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.setValueAtTime(480, now + 0.1);
+          osc.frequency.setValueAtTime(360, now + 0.22);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          osc.start(now);
+          osc.stop(now + 0.45);
+        } else if (type === 'sparkle') {
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(freq, now + i * 0.06);
+            gain.gain.setValueAtTime(0.1, now + i * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.22);
+            osc.start(now + i * 0.06);
+            osc.stop(now + i * 0.06 + 0.22);
+          });
+        }
+      } catch (err) {}
+    }
+
+    function toggleSound() {
+      isSoundEnabled = !isSoundEnabled;
+      const btn = document.getElementById("soundToggleBtn");
+      btn.innerText = isSoundEnabled ? "🔊 사운드 ON" : "🔇 음소거";
+      btn.style.color = isSoundEnabled ? "#fff" : "var(--text-dim)";
+    }
+
+    /* ==========================================================================
+       4. PIXEL ART OFFICE CANVAS ENGINE
+       ========================================================================== */
+    const canvas = document.getElementById("officeCanvas");
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+
+    let activeMail = null;
+    let particles = [];
+    let officeTicks = 0;
+
+    const CEO_DESK = {
+      x: 440,
+      y: 65,
+      deptName: "👑 대표이사 (CEO 집무실)",
+      employeeName: "대표 (나)",
+      taskType: "최종 의사결정 및 신뢰도 부족 안건 직접 검토/결재",
+      color: "#fbbf24",
+      avatar: "👑",
+      draftTemplate: "대표이사 직접 결재 완료 건입니다."
+    };
+
+    const MAILBOX = {
+      x: 75,
+      y: 250,
+      name: "📬 우체통 (Mailbox)"
+    };
+
+    // Designated inspection stations on office floor
+    const INSPECTION_STATION_A = { x: 290, y: 130, label: "1차 분류 관문" };
+    const INSPECTION_STATION_B = { x: 440, y: 250, label: "2차 정밀 분석대" };
+
+    function getDeskList() {
+      const list = [{ ...CEO_DESK, isCeo: true, id: "ceo" }];
+      let dynamicIndex = 0;
+      for (const [actionId, action] of Object.entries(currentTree.actions)) {
+        let x = action.deskX;
+        let y = action.deskY;
+        if (!x || !y) {
+          x = 220 + (dynamicIndex % 3) * 220;
+          y = 160 + Math.floor(dynamicIndex / 3) * 120;
+          dynamicIndex++;
+        }
+        list.push({
+          ...action,
+          x,
+          y,
+          isCeo: false
+        });
+      }
+      return list;
+    }
+
+    function renderOffice() {
+      officeTicks++;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. Floor
+      drawParquetFloor();
+
+      // 2. Inspection Stations
+      drawInspectionStations();
+
+      // 3. Walls & Decor
+      drawOfficeWalls();
+
+      // 4. Appliances
+      drawOfficeAppliances();
+
+      // 5. Mailbox
+      drawMailbox();
+
+      // 6. Desks & Characters
+      const desks = getDeskList();
+      desks.forEach(desk => {
+        if (desk.isCeo) {
+          drawCeoOffice(desk);
+        } else {
+          drawEmployeeDesk(desk);
+        }
+      });
+
+      // Hover highlight
+      if (hoveredDesk) {
+        ctx.strokeStyle = "#fbbf24";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(hoveredDesk.x - 34, hoveredDesk.y - 20, 68, 54);
+      }
+
+      // 7. Moving Mail & Speech Bubble
+      if (activeMail) {
+        updateAndDrawMail();
+      }
+
+      // 8. Particles
+      updateAndDrawParticles();
+
+      requestAnimationFrame(renderOffice);
+    }
+
+    function drawParquetFloor() {
+      const tileSize = 24;
+      for (let y = 60; y < canvas.height; y += tileSize) {
+        for (let x = 0; x < canvas.width; x += tileSize) {
+          const isEven = ((x / tileSize) + (y / tileSize)) % 2 === 0;
+          ctx.fillStyle = isEven ? "#2a1e17" : "#221710";
+          ctx.fillRect(x, y, tileSize, tileSize);
+
+          ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+          ctx.fillRect(x, y + tileSize - 1, tileSize, 1);
+          ctx.fillRect(x + tileSize - 1, y, 1, tileSize);
+        }
+      }
+
+      // Royal Blue Carpet for CEO Area
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(360, 40, 160, 95);
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(362, 42, 156, 91);
+      ctx.strokeStyle = "rgba(251, 191, 36, 0.35)";
+      ctx.strokeRect(366, 46, 148, 83);
+    }
+
+    function drawInspectionStations() {
+      // Station A
+      ctx.fillStyle = "rgba(99, 102, 241, 0.15)";
+      ctx.beginPath();
+      ctx.arc(INSPECTION_STATION_A.x, INSPECTION_STATION_A.y, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(99, 102, 241, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.font = "8px 'Pretendard', sans-serif";
+      ctx.fillStyle = "#818cf8";
+      ctx.fillText("🔬 1차 분류 게이트", INSPECTION_STATION_A.x - 34, INSPECTION_STATION_A.y + 32);
+
+      // Station B
+      ctx.fillStyle = "rgba(56, 189, 248, 0.12)";
+      ctx.beginPath();
+      ctx.arc(INSPECTION_STATION_B.x, INSPECTION_STATION_B.y, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+      ctx.stroke();
+      ctx.fillStyle = "#38bdf8";
+      ctx.fillText("⚡️ 2차 정밀 분석대", INSPECTION_STATION_B.x - 34, INSPECTION_STATION_B.y + 32);
+    }
+
+    function drawOfficeWalls() {
+      ctx.fillStyle = "#151821";
+      ctx.fillRect(0, 0, canvas.width, 60);
+
+      ctx.fillStyle = "#3e2723";
+      ctx.fillRect(0, 56, canvas.width, 6);
+
+      const neonGlow = Math.sin(officeTicks * 0.05) * 0.2 + 0.8;
+      ctx.font = "8px 'Press Start 2P', monospace";
+      ctx.fillStyle = `rgba(99, 102, 241, ${neonGlow})`;
+      ctx.fillText("NEXT AI 1인 기업 HQ", 50, 32);
+
+      // Wall Clock
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(260, 28, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      const secAngle = (officeTicks * 0.05);
+      ctx.beginPath();
+      ctx.moveTo(260, 28);
+      ctx.lineTo(260 + Math.cos(secAngle) * 8, 28 + Math.sin(secAngle) * 8);
+      ctx.strokeStyle = "#ef4444";
+      ctx.stroke();
+
+      // Certificate Frame
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(600, 16, 26, 20);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(602, 18, 22, 16);
+      ctx.fillStyle = "#4f46e5";
+      ctx.fillRect(606, 22, 14, 2);
+      ctx.fillRect(606, 26, 10, 2);
+    }
+
+    function drawOfficeAppliances() {
+      // Server Rack
+      const rackX = 810;
+      const rackY = 20;
+      ctx.fillStyle = "#1e2430";
+      ctx.fillRect(rackX, rackY, 45, 75);
+      ctx.strokeStyle = "#374151";
+      ctx.strokeRect(rackX, rackY, 45, 75);
+
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = "#111827";
+        ctx.fillRect(rackX + 4, rackY + 6 + i * 16, 37, 12);
+        const isLedOn1 = (officeTicks + i * 15) % 40 < 20;
+        const isLedOn2 = (officeTicks + i * 23) % 30 < 15;
+        ctx.fillStyle = isLedOn1 ? "#10b981" : "#064e3b";
+        ctx.fillRect(rackX + 8, rackY + 10 + i * 16, 4, 4);
+        ctx.fillStyle = isLedOn2 ? "#38bdf8" : "#0c4a6e";
+        ctx.fillRect(rackX + 16, rackY + 10 + i * 16, 4, 4);
+      }
+
+      // Water Cooler
+      const coolerX = 740;
+      const coolerY = 22;
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillRect(coolerX, coolerY + 18, 22, 34);
+      ctx.fillStyle = "rgba(56, 189, 248, 0.75)";
+      ctx.beginPath();
+      ctx.arc(coolerX + 11, coolerY + 10, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Potted Plants
+      drawPlant(325, 45);
+      drawPlant(545, 45);
+      drawPlant(35, 440);
+    }
+
+    function drawPlant(x, y) {
+      ctx.fillStyle = "#c2410c";
+      ctx.fillRect(x, y + 12, 14, 12);
+      ctx.fillStyle = "#15803d";
+      ctx.beginPath();
+      ctx.arc(x + 7, y + 8, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#22c55e";
+      ctx.beginPath();
+      ctx.arc(x + 4, y + 5, 5, 0, Math.PI * 2);
+      ctx.arc(x + 10, y + 5, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawMailbox() {
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(MAILBOX.x + 8, MAILBOX.y + 12, 6, 24);
+
+      ctx.fillStyle = "#1e3a8a";
+      ctx.fillRect(MAILBOX.x, MAILBOX.y, 22, 16);
+      ctx.fillStyle = "#3b82f6";
+      ctx.fillRect(MAILBOX.x + 2, MAILBOX.y + 2, 18, 12);
+
+      const hasActiveMail = !!activeMail;
+      ctx.fillStyle = "#ef4444";
+      if (hasActiveMail) {
+        ctx.fillRect(MAILBOX.x + 20, MAILBOX.y - 6, 8, 5);
+        ctx.fillRect(MAILBOX.x + 20, MAILBOX.y - 6, 2, 8);
+      } else {
+        ctx.fillRect(MAILBOX.x + 20, MAILBOX.y + 4, 8, 3);
+      }
+
+      ctx.font = "8px 'Pretendard', sans-serif";
+      ctx.fillStyle = "#e0e7ff";
+      ctx.fillText("📬 우체통", MAILBOX.x - 6, MAILBOX.y + 44);
+    }
+
+    function drawCeoOffice(desk) {
+      const bob = Math.sin(officeTicks * 0.08) * 1.5;
+
+      ctx.fillStyle = "#7c2d12";
+      ctx.fillRect(desk.x - 14, desk.y - 20, 28, 16);
+
+      drawPixelPerson(desk.x, desk.y - 12 + bob, {
+        hairColor: "#1e293b",
+        shirtColor: "#1e3a8a",
+        crown: true,
+        typing: pendingCeoReview !== null
+      });
+
+      ctx.fillStyle = "#5c2b14";
+      ctx.fillRect(desk.x - 38, desk.y, 76, 26);
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(desk.x - 36, desk.y + 2, 72, 22);
+
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(desk.x - 16, desk.y + 16, 32, 6);
+      ctx.fillStyle = "#000";
+      ctx.font = "5px 'Pretendard', sans-serif";
+      ctx.fillText("CEO 대표", desk.x - 12, desk.y + 21);
+
+      ctx.fillStyle = "#d97706";
+      ctx.fillRect(desk.x - 8, desk.y + 4, 16, 10);
+      ctx.fillStyle = "#60a5fa";
+      ctx.fillRect(desk.x - 6, desk.y + 6, 12, 6);
+
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(desk.x + 18, desk.y + 6, 5, 6);
+
+      ctx.font = "9px 'Pretendard', sans-serif";
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillText("👑 대표이사 (CEO)", desk.x - 32, desk.y - 26);
+
+      if (pendingCeoReview) {
+        const qBob = Math.sin(officeTicks * 0.2) * 4;
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath();
+        ctx.arc(desk.x, desk.y - 36 + qBob, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = "bold 11px 'Pretendard', sans-serif";
+        ctx.fillStyle = "#fff";
+        ctx.fillText("?", desk.x - 3, desk.y - 32 + qBob);
+      }
+    }
+
+    function drawEmployeeDesk(desk) {
+      const isWorking = (activeMail && activeMail.targetDeskId === desk.id);
+      const bob = Math.sin(officeTicks * 0.08 + desk.x) * 1.2;
+
+      ctx.fillStyle = "#374151";
+      ctx.fillRect(desk.x - 12, desk.y - 18, 24, 14);
+
+      drawPixelPerson(desk.x, desk.y - 10 + bob, {
+        hairColor: desk.color,
+        shirtColor: desk.color,
+        crown: false,
+        typing: isWorking
+      });
+
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(desk.x - 30, desk.y, 60, 22);
+      ctx.fillStyle = "#475569";
+      ctx.fillRect(desk.x - 28, desk.y + 2, 56, 18);
+
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(desk.x - 10, desk.y + 3, 20, 12);
+      const screenColor = isWorking ? "#10b981" : "#38bdf8";
+      ctx.fillStyle = screenColor;
+      ctx.fillRect(desk.x - 8, desk.y + 5, 16, 8);
+
+      ctx.font = "9px 'Pretendard', sans-serif";
+      ctx.fillStyle = "#f3f4f6";
+      const label = `${desk.avatar} ${desk.employeeName}`;
+      ctx.fillText(label, desk.x - (ctx.measureText(label).width / 2), desk.y + 34);
+
+      if (isWorking && activeMail.isDrafting) {
+        drawSpeechBubble(desk.x, desk.y - 32, "✨ 초안 작성 중...");
+      }
+    }
+
+    function drawPixelPerson(x, y, options) {
+      ctx.fillStyle = "#fcd34d";
+      ctx.fillRect(x - 6, y - 10, 12, 10);
+
+      ctx.fillStyle = options.hairColor || "#1f2937";
+      ctx.fillRect(x - 7, y - 14, 14, 6);
+      ctx.fillRect(x - 7, y - 14, 3, 9);
+
+      const isBlink = officeTicks % 90 < 4;
+      ctx.fillStyle = isBlink ? "#fcd34d" : "#111827";
+      ctx.fillRect(x - 3, y - 6, 2, 2);
+      ctx.fillRect(x + 2, y - 6, 2, 2);
+
+      if (options.crown) {
+        ctx.fillStyle = "#fbbf24";
+        ctx.fillRect(x - 6, y - 18, 12, 4);
+        ctx.fillRect(x - 6, y - 20, 3, 3);
+        ctx.fillRect(x - 1, y - 21, 3, 4);
+        ctx.fillRect(x + 4, y - 20, 3, 3);
+      }
+
+      ctx.fillStyle = options.shirtColor || "#4f46e5";
+      ctx.fillRect(x - 7, y, 14, 10);
+
+      if (options.typing) {
+        const handShift = Math.sin(officeTicks * 0.5) * 2;
+        ctx.fillStyle = "#fcd34d";
+        ctx.fillRect(x - 6 + handShift, y + 4, 3, 3);
+        ctx.fillRect(x + 4 - handShift, y + 4, 3, 3);
+      }
+    }
+
+    function drawSpeechBubble(x, y, text) {
+      ctx.font = "9px 'Pretendard', sans-serif";
+      const textWidth = ctx.measureText(text).width;
+      const bw = textWidth + 14;
+      const bh = 18;
+      const bx = x - bw / 2;
+      const by = y - bh;
+
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(bx, by, bw, bh);
+      ctx.strokeStyle = "#111827";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx, by, bw, bh);
+
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.moveTo(x - 3, by + bh);
+      ctx.lineTo(x + 3, by + bh);
+      ctx.lineTo(x, by + bh + 4);
+      ctx.fill();
+
+      ctx.fillStyle = "#111827";
+      ctx.fillText(text, bx + 7, by + 12);
+    }
+
+    function updateAndDrawMail() {
+      if (!activeMail) return;
+
+      const dx = activeMail.targetX - activeMail.x;
+      const dy = activeMail.targetY - activeMail.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const speed = 4 * simSpeedMultiplier;
+
+      if (dist < speed) {
+        activeMail.x = activeMail.targetX;
+        activeMail.y = activeMail.targetY;
+
+        if (activeMail.pathWaypoints.length > 0) {
+          const nextWaypoint = activeMail.pathWaypoints.shift();
+          activeMail.targetX = nextWaypoint.x;
+          activeMail.targetY = nextWaypoint.y;
+          activeMail.currentStepText = nextWaypoint.stepText;
+
+          if (nextWaypoint.onArrive) nextWaypoint.onArrive();
+        } else {
+          if (activeMail.onComplete) {
+            const cb = activeMail.onComplete;
+            activeMail.onComplete = null;
+            cb();
+          }
+        }
+      } else {
+        activeMail.x += (dx / dist) * speed;
+        activeMail.y += (dy / dist) * speed;
+      }
+
+      const mailX = activeMail.x;
+      const mailY = activeMail.y;
+
+      // Shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+      ctx.beginPath();
+      ctx.ellipse(mailX, mailY + 12, 10, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Envelope body
+      ctx.fillStyle = "#fef08a";
+      ctx.fillRect(mailX - 9, mailY - 6, 18, 13);
+      ctx.strokeStyle = "#ca8a04";
+      ctx.strokeRect(mailX - 9, mailY - 6, 18, 13);
+
+      // Wax Seal
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(mailX, mailY + 1, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (activeMail.currentStepText) {
+        drawSpeechBubble(mailX, mailY - 14, activeMail.currentStepText);
+      }
+    }
+
+    function addSparkles(x, y, count = 8) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 4,
+          vy: (Math.random() - 1) * 3 - 1,
+          size: Math.random() * 4 + 2,
+          color: ['#fbbf24', '#38bdf8', '#34d399', '#f472b6'][Math.floor(Math.random() * 4)],
+          life: 30
+        });
+      }
+    }
+
+    function updateAndDrawParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        p.size *= 0.95;
+
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+    }
+
+    // Canvas interactivity: Hover & Click
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top) * scaleY;
+
+      const desks = getDeskList();
+      hoveredDesk = null;
+      for (const d of desks) {
+        if (mx >= d.x - 34 && mx <= d.x + 34 && my >= d.y - 20 && my <= d.y + 34) {
+          hoveredDesk = d;
+          break;
+        }
+      }
+      canvas.style.cursor = hoveredDesk ? "pointer" : "default";
+    });
+
+    canvas.addEventListener("click", () => {
+      if (hoveredDesk) {
+        showDeskInfoModal(hoveredDesk);
+      }
+    });
+
+    function showDeskInfoModal(desk) {
+      document.getElementById("deskModalTitle").innerText = `${desk.avatar || '🏢'} ${desk.deptName}`;
+      document.getElementById("deskModalBody").innerHTML = `
+        <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+          <p><strong>담당 캐릭터:</strong> ${desk.employeeName}</p>
+          <p style="margin-top: 4px;"><strong>주요 수행 업무:</strong> ${desk.taskType}</p>
+          <p style="margin-top: 4px;"><strong>위치 좌표:</strong> (${desk.x}, ${desk.y})</p>
+        </div>
+        <h4 style="font-size: 12px; font-weight: 700; color: #a5b4fc; margin-bottom: 6px;">기본 답변 초안 템플릿:</h4>
+        <div class="draft-speech-box">
+          "${desk.draftTemplate}"
+        </div>
+      `;
+      document.getElementById("deskInfoModal").style.display = "flex";
+    }
+
+    // Start Canvas render loop
+    requestAnimationFrame(renderOffice);
+
+    /* ==========================================================================
+       5. LOCAL OLLAMA 0.35+ API CLIENT & SIMULATION ENGINE
+       ========================================================================== */
+    async function queryOllamaSystemOne(payload) {
+      const endpoint = "http://localhost:11434/v1/systemone";
+      const model = document.getElementById("modelSelect").value || "tev1:0.8b";
+      const startTime = performance.now();
+
+      if (currentMode === "demo") {
+        await sleep(150 + Math.random() * 150);
+        const simResult = simulateSystemOneAnswer(payload);
+        const elapsedMs = Math.round(performance.now() - startTime);
+        return { result: simResult, elapsedMs, isDemo: true };
+      }
+
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: model,
+            state: payload.state,
+            questions: payload.questions
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error(`Ollama 서버 응답 에러 (${res.status} ${res.statusText})`);
+        }
+
+        const data = await res.json();
+        const elapsedMs = Math.round(performance.now() - startTime);
+        return { result: data, elapsedMs, isDemo: false };
+      } catch (err) {
+        console.warn("Ollama 연결 실패:", err);
+        showOllamaFailNotice(err.message);
+        throw err;
+      }
+    }
+
+    function showOllamaFailNotice(msg) {
+      const confirmDemo = confirm(
+        `[Ollama 0.35+ 로컬 연결 실패]\n${msg}\n\n로컬 Ollama가 꺼져있거나 브라우저 CORS 설정(OLLAMA_ORIGINS="*")이 되어있지 않습니다.\n\n안내창을 열고 '체험 모드(Demo Mode)'로 안전하게 전환하시겠습니까?`
+      );
+      if (confirmDemo) {
+        setMode("demo");
+        openOllamaGuide();
+      }
+    }
+
+    function simulateSystemOneAnswer(payload) {
+      const body = (payload.state.subject + " " + payload.state.body).toLowerCase();
+      const answers = {};
+
+      for (const [qId, qDef] of Object.entries(payload.questions)) {
+        if (qId === "category") {
+          let pBilling = 0.05, pTech = 0.05, pPart = 0.05, pMent = 0.05;
+
+          if (body.includes("환불") || body.includes("결제") || body.includes("카드") || body.includes("영수증") || body.includes("청구")) {
+            pBilling += 0.85;
+          }
+          if (body.includes("에러") || body.includes("버그") || body.includes("colab") || body.includes("cuda") || body.includes("로그인") || body.includes("500")) {
+            pTech += 0.85;
+          }
+          if (body.includes("특강") || body.includes("출강") || body.includes("협찬") || body.includes("ppl") || body.includes("제안") || body.includes("스폰서")) {
+            pPart += 0.85;
+          }
+          if (body.includes("질문") || body.includes("수식") || body.includes("attention") || body.includes("진로") || body.includes("조언")) {
+            pMent += 0.80;
+          }
+
+          // Ambiguous cases
+          if (body.includes("동업") || body.includes("키보드") || body.includes("모니터")) {
+            pBilling = 0.30;
+            pPart = 0.32;
+            pMent = 0.28;
+            pTech = 0.10;
+          }
+
+          const sum = pBilling + pTech + pPart + pMent;
+          const probs = {
+            "billing": Number((pBilling / sum).toFixed(3)),
+            "technical": Number((pTech / sum).toFixed(3)),
+            "partnership": Number((pPart / sum).toFixed(3)),
+            "mentoring": Number((pMent / sum).toFixed(3))
+          };
+
+          const choice = Object.keys(probs).reduce((a, b) => probs[a] > probs[b] ? a : b);
+          const topProb = probs[choice];
+          const confidence = Number((topProb > 0.6 ? 0.85 + (topProb - 0.6) * 0.25 : 0.42).toFixed(3));
+
+          answers[qId] = {
+            type: "choice",
+            choice: choice,
+            probabilities: probs,
+            confidence: confidence
+          };
+        } else if (qId === "is_refund") {
+          const isExplicit = (body.includes("환불") || body.includes("취소") || body.includes("돈 돌려"));
+          const noulVal = isExplicit ? 0.982 : 0.084;
+          answers[qId] = {
+            type: "noul",
+            noul: noulVal,
+            confidence: 0.95
+          };
+        } else if (qId === "refund_urgency") {
+          const isAngry = (body.includes("화남") || body.includes("신고") || body.includes("소비자원") || body.includes("이중") || body.includes("두 번") || body.includes("당장"));
+          let scoreVal = isAngry ? 1.85 : 0.15;
+          answers[qId] = {
+            type: "score",
+            score: scoreVal,
+            legend: { "0": "Routine", "1": "High", "2": "Critical" },
+            probabilities: isAngry ? { "0": 0.05, "1": 0.35, "2": 0.60 } : { "0": 0.88, "1": 0.10, "2": 0.02 },
+            confidence: 0.92
+          };
+        } else if (qId === "issue_type") {
+          const isCode = (body.includes("cuda") || body.includes("코드") || body.includes("colab") || body.includes("스크립트"));
+          answers[qId] = {
+            type: "choice",
+            choice: isCode ? "code_bug" : "platform_access",
+            probabilities: isCode ? { "code_bug": 0.95, "platform_access": 0.05 } : { "code_bug": 0.08, "platform_access": 0.92 },
+            confidence: 0.94
+          };
+        } else if (qId === "deal_scale") {
+          const isBig = (body.includes("현대") || body.includes("삼성") || body.includes("80명") || body.includes("사내특강") || body.includes("출강"));
+          answers[qId] = {
+            type: "score",
+            score: isBig ? 2.0 : 0.4,
+            legend: { "0": "Small", "1": "Mid", "2": "Large" },
+            probabilities: isBig ? { "0": 0.02, "1": 0.18, "2": 0.80 } : { "0": 0.75, "1": 0.20, "2": 0.05 },
+            confidence: 0.91
+          };
+        }
+      }
+
+      return {
+        model: "tev1:0.8b",
+        answers: answers,
+        usage: { input_tokens: 340, output_tokens: 4 }
+      };
+    }
+
+    /* ==========================================================================
+       6. CHAIN DISPATCH & WORKFLOW EXECUTION
+       ========================================================================== */
+    async function processIncomingMessage(msg) {
+      if (activeMail) {
+        alert("현재 이전 메시지가 오피스에서 처리 중입니다. 잠시만 기다려주세요!");
+        return;
+      }
+
+      playSound("mail");
+
+      document.getElementById("inspSender").innerText = `발신자: ${msg.sender}`;
+      document.getElementById("inspSubject").innerText = msg.subject;
+      document.getElementById("inspBody").innerText = msg.body;
+      document.getElementById("inspTime").innerText = "방금 전";
+
+      document.getElementById("questionsEvalContainer").innerHTML = "";
+      document.getElementById("actionResultContainer").style.display = "none";
+      document.getElementById("trajectorySteps").innerHTML = `<span class="path-node-tag">📬 우체통 수신</span>`;
+
+      let currentQuestionId = currentTree.rootQuestionId;
+      let evaluatedChain = [];
+      let finalAction = null;
+      let totalTimeMs = 0;
+
+      // Start Mail at Mailbox
+      activeMail = {
+        x: MAILBOX.x,
+        y: MAILBOX.y,
+        targetX: INSPECTION_STATION_A.x,
+        targetY: INSPECTION_STATION_A.y,
+        pathWaypoints: [],
+        currentStepText: "📬 새 메일 도착",
+        targetDeskId: null,
+        isDrafting: false
+      };
+
+      let stepCounter = 0;
+
+      // Traverse Chain step by step
+      while (currentQuestionId) {
+        const questionDef = currentTree.questions[currentQuestionId];
+        if (!questionDef) break;
+
+        stepCounter++;
+
+        // Send mail to waypoint
+        if (stepCounter === 1) {
+          activeMail.targetX = INSPECTION_STATION_A.x;
+          activeMail.targetY = INSPECTION_STATION_A.y;
+        } else {
+          activeMail.targetX = INSPECTION_STATION_B.x;
+          activeMail.targetY = INSPECTION_STATION_B.y;
+        }
+
+        activeMail.currentStepText = `🔎 [${questionDef.nameKo}] 분석 중`;
+        await sleep(500 / simSpeedMultiplier);
+
+        const payload = {
+          state: {
+            sender: msg.sender,
+            subject: msg.subject,
+            body: msg.body
+          },
+          questions: {
+            [currentQuestionId]: {
+              type: questionDef.type,
+              instructions: questionDef.instructions,
+              criteria: questionDef.criteria
+            }
+          }
+        };
+
+        let response;
+        try {
+          response = await queryOllamaSystemOne(payload);
+        } catch (err) {
+          activeMail = null;
+          return;
+        }
+
+        totalTimeMs += response.elapsedMs;
+        const answer = response.result.answers[currentQuestionId];
+        const confidence = answer.confidence !== undefined ? answer.confidence : 0.85;
+
+        renderQuestionEvaluationCard(questionDef, answer, confidence, response.elapsedMs);
+        playSound("tick");
+
+        evaluatedChain.push({
+          questionId: currentQuestionId,
+          questionNameKo: questionDef.nameKo,
+          answer: answer,
+          confidence: confidence,
+          timeMs: response.elapsedMs
+        });
+
+        updateTrajectoryUI(evaluatedChain);
+
+        // Check Confidence Threshold (< threshold -> CEO)
+        const threshold = questionDef.threshold || 0.50;
+        if (confidence < threshold) {
+          await routeToCeoForManualDecision(msg, evaluatedChain, questionDef, answer);
+          return;
+        }
+
+        // Determine Next Route
+        let routeResult = null;
+        if (questionDef.type === "choice") {
+          const chosenOpt = answer.choice;
+          routeResult = questionDef.routes[chosenOpt];
+        } else if (questionDef.type === "noul") {
+          const isYes = answer.noul >= (questionDef.threshold || 0.70);
+          routeResult = questionDef.routes[isYes ? "yes" : "no"];
+        } else if (questionDef.type === "score") {
+          const level = Math.min(2, Math.max(0, Math.round(answer.score || 0))).toString();
+          routeResult = questionDef.routes[level] || questionDef.routes["0"];
+        }
+
+        if (routeResult && routeResult.type === "question") {
+          currentQuestionId = routeResult.target;
+          activeMail.currentStepText = `다음 질문으로 이송 ➜`;
+          await sleep(600 / simSpeedMultiplier);
+        } else if (routeResult && routeResult.type === "action") {
+          finalAction = currentTree.actions[routeResult.target];
+          currentQuestionId = null;
+        } else {
+          currentQuestionId = null;
+        }
+      }
+
+      if (finalAction) {
+        await deliverToFinalAction(finalAction, msg, evaluatedChain, totalTimeMs);
+      }
+    }
+
+    async function routeToCeoForManualDecision(msg, evaluatedChain, questionDef, answer) {
+      playSound("ceo_alert");
+      activeMail.currentStepText = "⚠️ [신뢰도 부족] 👑 대표 결재 필요";
+      activeMail.targetX = CEO_DESK.x;
+      activeMail.targetY = CEO_DESK.y + 24;
+
+      document.getElementById("kpiCeoPending").innerText = "1건";
+      document.getElementById("kpiCeoCard").style.animation = "pulse-glow 1s infinite";
+
+      const ceoAlertBar = document.getElementById("ceoAlertBar");
+      document.getElementById("ceoConfVal").innerText = (answer.confidence || 0.42).toFixed(2);
+      document.getElementById("ceoAlertMsgSummary").innerText = `'${msg.subject}' - 신뢰도가 낮아 대표님의 결재가 필요합니다.`;
+
+      const chipsContainer = document.getElementById("ceoActionChips");
+      chipsContainer.innerHTML = "";
+      for (const [actId, act] of Object.entries(currentTree.actions)) {
+        const btn = document.createElement("button");
+        btn.className = "ceo-chip";
+        btn.innerText = `${act.avatar} ${act.deptName}`;
+        btn.onclick = () => {
+          resolveCeoDecision(actId, msg, evaluatedChain);
+        };
+        chipsContainer.appendChild(btn);
+      }
+
+      ceoAlertBar.style.display = "flex";
+      pendingCeoReview = { msg, evaluatedChain };
+    }
+
+    async function resolveCeoDecision(actionId, msg, evaluatedChain) {
+      const ceoAlertBar = document.getElementById("ceoAlertBar");
+      ceoAlertBar.style.display = "none";
+      pendingCeoReview = null;
+      document.getElementById("kpiCeoPending").innerText = "0건";
+      document.getElementById("kpiCeoCard").style.animation = "none";
+
+      const finalAction = currentTree.actions[actionId];
+      if (finalAction) {
+        evaluatedChain.push({
+          questionId: "ceo_override",
+          questionNameKo: "👑 CEO 직접 결재",
+          answer: { choice: finalAction.deptName },
+          confidence: 1.0,
+          timeMs: 0
+        });
+        updateTrajectoryUI(evaluatedChain);
+        await deliverToFinalAction(finalAction, msg, evaluatedChain, 120);
+      }
+    }
+
+    async function deliverToFinalAction(finalAction, msg, evaluatedChain, totalTimeMs) {
+      activeMail.targetX = finalAction.deskX || 300;
+      activeMail.targetY = (finalAction.deskY || 200) + 16;
+      activeMail.targetDeskId = finalAction.id;
+      activeMail.currentStepText = `🚚 [${finalAction.deptName}] 이송 중`;
+
+      await sleep(1000 / simSpeedMultiplier);
+
+      activeMail.isDrafting = true;
+      playSound("mail");
+      await sleep(1200 / simSpeedMultiplier);
+
+      activeMail.isDrafting = false;
+      addSparkles(finalAction.deskX, finalAction.deskY, 15);
+      playSound("sparkle");
+
+      document.getElementById("actAvatar").innerText = finalAction.avatar;
+      document.getElementById("actDeptName").innerText = `담당 부서: ${finalAction.deptName}`;
+      document.getElementById("actTaskType").innerText = `수행 업무: ${finalAction.taskType}`;
+      document.getElementById("actSpeechDraft").innerText = `"${finalAction.draftTemplate}"`;
+      document.getElementById("actionResultContainer").style.display = "block";
+
+      const logEntry = {
+        id: "log_" + Date.now(),
+        timestamp: new Date().toLocaleTimeString(),
+        sender: msg.sender,
+        subject: msg.subject,
+        body: msg.body,
+        trajectory: evaluatedChain,
+        finalActionId: finalAction.id,
+        finalActionName: finalAction.deptName,
+        totalTimeMs: totalTimeMs,
+        isCorrect: true
+      };
+
+      stats.logs.unshift(logEntry);
+      stats.tasksHandled++;
+      stats.totalDecisionMs += totalTimeMs;
+      stats.accuracyEvaluations.push(true);
+
+      try {
+        localStorage.setItem("my_ai_company_logs", JSON.stringify(stats.logs.slice(0, 100)));
+      } catch (e) {}
+
+      updateKpis();
+      renderLogsTable();
+
+      await sleep(800 / simSpeedMultiplier);
+      activeMail = null;
+    }
+
+    /* ==========================================================================
+       7. UI INSPECTOR & TRAJECTORY RENDERING
+       ========================================================================== */
+    function renderQuestionEvaluationCard(qDef, answer, confidence, elapsedMs) {
+      const container = document.getElementById("questionsEvalContainer");
+
+      const card = document.createElement("div");
+      card.className = "question-eval-card active-step";
+
+      let typeBadge = "choice (선택형)";
+      if (qDef.type === "noul") typeBadge = "noul (Yes/No형)";
+      if (qDef.type === "score") typeBadge = "score (점수형)";
+
+      let barsHtml = "";
+      if (qDef.type === "choice" && answer.probabilities) {
+        for (const [optKey, prob] of Object.entries(answer.probabilities)) {
+          const isWinner = (optKey === answer.choice);
+          const percent = (prob * 100).toFixed(1);
+          barsHtml += `
+            <div class="prob-bar-row">
+              <div class="prob-info">
+                <span class="prob-opt-name">${optKey} ${isWinner ? '✅' : ''}</span>
+                <span class="prob-opt-value">${percent}%</span>
+              </div>
+              <div class="prob-track">
+                <div class="prob-fill ${isWinner ? 'winner' : ''}" style="width: ${percent}%;"></div>
+              </div>
+            </div>
+          `;
+        }
+      } else if (qDef.type === "noul") {
+        const yesPercent = ((answer.noul || 0.5) * 100).toFixed(1);
+        const noPercent = (100 - yesPercent).toFixed(1);
+        const isYes = (answer.noul || 0) >= (qDef.threshold || 0.70);
+        barsHtml += `
+          <div class="prob-bar-row">
+            <div class="prob-info">
+              <span class="prob-opt-name">YES (임계치 70%) ${isYes ? '✅' : ''}</span>
+              <span class="prob-opt-value">${yesPercent}%</span>
+            </div>
+            <div class="prob-track">
+              <div class="prob-fill ${isYes ? 'winner' : ''}" style="width: ${yesPercent}%;"></div>
+            </div>
+          </div>
+          <div class="prob-bar-row">
+            <div class="prob-info">
+              <span class="prob-opt-name">NO ${!isYes ? '✅' : ''}</span>
+              <span class="prob-opt-value">${noPercent}%</span>
+            </div>
+            <div class="prob-track">
+              <div class="prob-fill ${!isYes ? 'winner' : ''}" style="width: ${noPercent}%;"></div>
+            </div>
+          </div>
+        `;
+      } else if (qDef.type === "score" && answer.probabilities) {
+        for (const [lvl, prob] of Object.entries(answer.probabilities)) {
+          const isWinner = Math.round(answer.score || 0) == lvl;
+          const percent = (prob * 100).toFixed(1);
+          const legendText = qDef.criteria && qDef.criteria[lvl] ? `(${qDef.criteria[lvl]})` : '';
+          barsHtml += `
+            <div class="prob-bar-row">
+              <div class="prob-info">
+                <span class="prob-opt-name">Level ${lvl} ${legendText} ${isWinner ? '✅' : ''}</span>
+                <span class="prob-opt-value">${percent}%</span>
+              </div>
+              <div class="prob-track">
+                <div class="prob-fill ${isWinner ? 'winner' : ''}" style="width: ${percent}%;"></div>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      let confColor = "#10b981";
+      if (confidence < 0.5) confColor = "#ef4444";
+      else if (confidence < 0.75) confColor = "#f59e0b";
+
+      card.innerHTML = `
+        <div class="question-eval-header">
+          <div class="question-title-area">
+            <h5>❓ ${qDef.nameKo} <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">(${elapsedMs}ms)</span></h5>
+            <div class="question-en-instruction">"${qDef.instructions}"</div>
+          </div>
+          <span class="question-type-badge">${typeBadge}</span>
+        </div>
+        ${barsHtml}
+        <div class="confidence-meter-box">
+          <span class="confidence-label">AI 판단 신뢰도 (Confidence):</span>
+          <div class="confidence-visual">
+            <div class="conf-bar-track">
+              <div class="conf-bar-fill" style="width: ${(confidence * 100).toFixed(0)}%; background: ${confColor};"></div>
+            </div>
+            <span class="conf-badge" style="background: ${confColor}22; color: ${confColor}; border: 1px solid ${confColor}55;">
+              ${(confidence * 100).toFixed(1)}%
+            </span>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(card);
+    }
+
+    function updateTrajectoryUI(chain) {
+      const container = document.getElementById("trajectorySteps");
+      let html = `<span class="path-node-tag">📬 우체통 수신</span>`;
+      chain.forEach(step => {
+        let answerLabel = "";
+        if (step.answer.choice) answerLabel = step.answer.choice;
+        else if (step.answer.noul !== undefined) answerLabel = step.answer.noul >= 0.7 ? "YES" : "NO";
+        else if (step.answer.score !== undefined) answerLabel = `Level ${Math.round(step.answer.score)}`;
+
+        html += `
+          <span class="path-arrow">➜</span>
+          <span class="path-node-tag" style="border-color: #6366f1;">
+            ${step.questionNameKo} (${answerLabel})
+          </span>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    /* ==========================================================================
+       8. KPI COUNTERS & METRICS UPDATE
+       ========================================================================== */
+    function updateKpis() {
+      document.getElementById("kpiTasksHandled").innerText = `${stats.tasksHandled}건`;
+      const avgSec = stats.tasksHandled > 0 ? (stats.totalDecisionMs / stats.tasksHandled / 1000).toFixed(2) : "0.00";
+      document.getElementById("kpiAvgDecisionTime").innerText = `${avgSec}초`;
+
+      const totalEvaluated = stats.accuracyEvaluations.length;
+      if (totalEvaluated > 0) {
+        const correctCount = stats.accuracyEvaluations.filter(Boolean).length;
+        const acc = ((correctCount / totalEvaluated) * 100).toFixed(1);
+        document.getElementById("kpiAccuracy").innerText = `${acc}%`;
+      }
+    }
+
+    /* ==========================================================================
+       9. DECISION LOG & FEEDBACK TABLE
+       ========================================================================== */
+    function renderLogsTable() {
+      const tbody = document.getElementById("logTableBody");
+      document.getElementById("logCountLabel").innerText = `(총 ${stats.logs.length}건)`;
+
+      if (stats.logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 30px;">아직 처리된 의사결정 로그가 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = "";
+      stats.logs.forEach((log, index) => {
+        const tr = document.createElement("tr");
+
+        const trajSnippet = log.trajectory.map(t => {
+          let ans = t.answer.choice || (t.answer.noul !== undefined ? (t.answer.noul >= 0.7 ? 'Y' : 'N') : `L${Math.round(t.answer.score || 0)}`);
+          return `${t.questionNameKo}(${ans})`;
+        }).join(" ➜ ");
+
+        const avgConf = log.trajectory.length > 0 
+          ? (log.trajectory.reduce((acc, t) => acc + (t.confidence || 0.8), 0) / log.trajectory.length * 100).toFixed(0) 
+          : "90";
+
+        tr.innerHTML = `
+          <td style="color: var(--text-dim); font-size: 10px;">${log.timestamp}</td>
+          <td>
+            <div style="font-weight: 700; color: #fff;">${escapeHtml(log.subject)}</div>
+            <div style="font-size: 10px; color: var(--text-muted);">${escapeHtml(log.sender)}</div>
+          </td>
+          <td>
+            <div style="font-size: 10px; color: #a5b4fc;">${trajSnippet}</div>
+            <span style="font-size: 10px; color: #10b981;">신뢰도: ${avgConf}% (${log.totalTimeMs}ms)</span>
+          </td>
+          <td>
+            <span style="font-size: 11px; font-weight: 700; color: #34d399;">${escapeHtml(log.finalActionName)}</span>
+          </td>
+          <td>
+            <div style="display: flex; gap: 4px;">
+              <button class="feedback-btn ${log.isCorrect ? 'active-correct' : ''}" onclick="markLogFeedback(${index}, true)">👍 맞음</button>
+              <button class="feedback-btn ${!log.isCorrect ? 'active-wrong' : ''}" onclick="markLogFeedback(${index}, false)">👎 틀림</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function markLogFeedback(index, isCorrect) {
+      if (!stats.logs[index]) return;
+      stats.logs[index].isCorrect = isCorrect;
+
+      if (!isCorrect) {
+        const actionOptions = Object.values(currentTree.actions).map(a => a.deptName).join("\n- ");
+        const correctDept = prompt(`어느 부서가 올바른 처리였습니까? 목록에서 입력하세요:\n- ${actionOptions}`, stats.logs[index].finalActionName);
+        if (correctDept) {
+          stats.logs[index].correctedTo = correctDept;
+        }
+      }
+
+      stats.accuracyEvaluations = stats.logs.map(l => l.isCorrect);
+      updateKpis();
+      renderLogsTable();
+      playSound("tick");
+    }
+
+    function exportLogsJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(stats.logs, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `ai_company_decision_logs_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    /* ==========================================================================
+       10. TREE FLOW EDITOR & NODE MANAGEMENT
+       ========================================================================== */
+    function renderTreeNodesList() {
+      const container = document.getElementById("treeNodesList");
+      container.innerHTML = "";
+
+      // Questions
+      for (const [qId, q] of Object.entries(currentTree.questions)) {
+        const card = document.createElement("div");
+        card.className = "tree-node-card question";
+
+        let branchesHtml = "";
+        for (const [branchKey, route] of Object.entries(q.routes || {})) {
+          let targetName = route.target;
+          if (route.type === "action" && currentTree.actions[route.target]) {
+            targetName = currentTree.actions[route.target].deptName;
+          } else if (route.type === "question" && currentTree.questions[route.target]) {
+            targetName = `[다음 질문] ${currentTree.questions[route.target].nameKo}`;
+          }
+
+          branchesHtml += `
+            <div class="branch-item">
+              <span><strong>${branchKey}</strong> ➜ ${targetName}</span>
+              <span style="color: var(--text-dim); font-size: 10px;">${route.type}</span>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="tree-node-top">
+            <span class="tree-node-title">❓ ${q.nameKo} <span style="font-size: 10px; color: var(--text-dim);">(${q.id})</span></span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span class="question-type-badge">${q.type}</span>
+              <button class="feedback-btn" style="color: #f87171;" onclick="deleteQuestionNode('${q.id}')">삭제</button>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">지시문: "${q.instructions}"</div>
+          <div style="font-size: 11px; color: #a5b4fc; font-weight: 600;">하위 분기 규칙:</div>
+          <div class="branch-list">${branchesHtml}</div>
+        `;
+        container.appendChild(card);
+      }
+
+      // Actions (Desks)
+      for (const [actId, act] of Object.entries(currentTree.actions)) {
+        const card = document.createElement("div");
+        card.className = "tree-node-card action";
+        card.innerHTML = `
+          <div class="tree-node-top">
+            <span class="tree-node-title">${act.avatar} ${act.deptName}</span>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span style="font-size: 10px; font-weight: 700; color: #34d399;">데스크: (${act.deskX}, ${act.deskY})</span>
+              <button class="feedback-btn" style="color: #f87171;" onclick="deleteActionNode('${act.id}')">삭제</button>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: #d1d5db; margin-bottom: 4px;">수행 업무: ${act.taskType}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">회신 초안: "${act.draftTemplate}"</div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function deleteQuestionNode(qId) {
+      if (qId === currentTree.rootQuestionId) {
+        alert("최상위 루트 질문(Root Question)은 삭제할 수 없습니다.");
+        return;
+      }
+      if (confirm(`질문 노드 [${qId}]를 삭제하시겠습니까?`)) {
+        delete currentTree.questions[qId];
+        saveDecisionTree(currentTree);
+        renderTreeNodesList();
+      }
+    }
+
+    function deleteActionNode(actId) {
+      if (Object.keys(currentTree.actions).length <= 2) {
+        alert("최소 2개 이상의 조치 부서 데스크가 유지되어야 합니다.");
+        return;
+      }
+      if (confirm(`조치 액션 및 데스크 [${actId}]를 오피스에서 철수하시겠습니까?`)) {
+        delete currentTree.actions[actId];
+        saveDecisionTree(currentTree);
+        renderTreeNodesList();
+      }
+    }
+
+    function openAddQuestionModal() {
+      document.getElementById("newQId").value = "";
+      document.getElementById("newQNameKo").value = "";
+      document.getElementById("newQInst").value = "";
+      document.getElementById("addQuestionModal").style.display = "flex";
+    }
+
+    function saveNewQuestion() {
+      const qId = document.getElementById("newQId").value.trim();
+      const nameKo = document.getElementById("newQNameKo").value.trim();
+      const type = document.getElementById("newQType").value;
+      const inst = document.getElementById("newQInst").value.trim();
+      const threshold = parseFloat(document.getElementById("newQThreshold").value) || 0.5;
+
+      if (!qId || !nameKo || !inst) {
+        alert("모든 필수 항목을 입력해주세요.");
+        return;
+      }
+
+      currentTree.questions[qId] = {
+        id: qId,
+        nameKo: nameKo,
+        type: type,
+        instructions: inst,
+        threshold: threshold,
+        criteria: type === "choice" ? { "yes": "Affirmative", "no": "Negative" } : ["Low", "High"],
+        routes: {
+          "yes": { type: "action", target: "action_standard_refund" },
+          "no": { type: "action", target: "action_mentoring" }
+        }
+      };
+
+      saveDecisionTree(currentTree);
+      renderTreeNodesList();
+      closeModal("addQuestionModal");
+      alert(`새 질문 노드 [${nameKo}]이(가) 추가되었습니다!`);
+    }
+
+    function openAddActionModal() {
+      document.getElementById("newActId").value = "";
+      document.getElementById("newActDept").value = "";
+      document.getElementById("newActTask").value = "";
+      document.getElementById("newActTemplate").value = "";
+      document.getElementById("addActionModal").style.display = "flex";
+    }
+
+    function saveNewAction() {
+      const actId = document.getElementById("newActId").value.trim();
+      const deptName = document.getElementById("newActDept").value.trim();
+      const task = document.getElementById("newActTask").value.trim();
+      const color = document.getElementById("newActColor").value;
+      const template = document.getElementById("newActTemplate").value.trim();
+
+      if (!actId || !deptName || !task) {
+        alert("모든 필수 항목을 입력해주세요.");
+        return;
+      }
+
+      const deskCount = Object.keys(currentTree.actions).length;
+      const newX = 320 + (deskCount % 3) * 170;
+      const newY = 220 + Math.floor(deskCount / 3) * 110;
+
+      currentTree.actions[actId] = {
+        id: actId,
+        deptName: deptName,
+        employeeName: deptName.split("(")[1]?.replace(")", "") || "신입봇",
+        taskType: task,
+        avatar: "🤖",
+        color: color,
+        deskX: newX,
+        deskY: newY,
+        draftTemplate: template || "안녕하세요, 담당 부서에서 확인 후 처리해 드립니다."
+      };
+
+      saveDecisionTree(currentTree);
+      renderTreeNodesList();
+      closeModal("addActionModal");
+      addSparkles(newX, newY, 20);
+      playSound("sparkle");
+      alert(`새 조치 액션 [${deptName}]이(가) 오피스에 등록되고 신규 데스크가 생성되었습니다!`);
+    }
+
+    function exportTreeJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentTree, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `ai_company_decision_tree_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function triggerImportTree() {
+      document.getElementById("treeFileInput").click();
+    }
+
+    function importTreeJson(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.questions && parsed.actions) {
+            currentTree = parsed;
+            saveDecisionTree(currentTree);
+            renderTreeNodesList();
+            alert("의사결정 트리 설정을 성공적으로 불러왔습니다!");
+          } else {
+            alert("올바른 트리 JSON 형식이 아닙니다.");
+          }
+        } catch (err) {
+          alert("JSON 파싱 에러: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetTreeToDefault() {
+      if (confirm("정말로 모든 의사결정 체인과 데스크를 기본 전문가 설정으로 복원하시겠습니까?")) {
+        currentTree = JSON.parse(JSON.stringify(DEFAULT_DECISION_TREE));
+        saveDecisionTree(currentTree);
+        renderTreeNodesList();
+        alert("기본 설정으로 복원되었습니다.");
+      }
+    }
+
+    function loadDecisionTree() {
+      try {
+        const saved = localStorage.getItem("my_ai_company_tree");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(DEFAULT_DECISION_TREE));
+    }
+
+    function saveDecisionTree(tree) {
+      try {
+        localStorage.setItem("my_ai_company_tree", JSON.stringify(tree));
+      } catch (e) {}
+    }
+
+    /* ==========================================================================
+       11. AUTO-RUN & SAMPLE TRIGGERS
+       ========================================================================== */
+    function loadSelectedExample() {
+      const idx = document.getElementById("exampleSelect").value;
+      if (idx !== "" && EXAMPLE_MESSAGES[idx]) {
+        const msg = EXAMPLE_MESSAGES[idx];
+        document.getElementById("manualSender").value = msg.sender;
+        document.getElementById("manualSubject").value = msg.subject;
+        document.getElementById("manualBody").value = msg.body;
+      }
+    }
+
+    function sendSelectedExample() {
+      const idx = document.getElementById("exampleSelect").value;
+      if (idx === "" || !EXAMPLE_MESSAGES[idx]) {
+        alert("먼저 드롭다운에서 테스트할 예제 메일을 선택하세요!");
+        return;
+      }
+      processIncomingMessage(EXAMPLE_MESSAGES[idx]);
+    }
+
+    function toggleAutoRun() {
+      isAutoRunActive = !isAutoRunActive;
+      const btn = document.getElementById("autoRunBtn");
+      const icon = document.getElementById("autoRunIcon");
+
+      if (isAutoRunActive) {
+        btn.classList.add("active");
+        icon.innerText = "⏸";
+        btn.innerHTML = `<span id="autoRunIcon">⏸</span> 자동 실행 가동 중...`;
+        runNextAutoSample();
+        autoRunTimer = setInterval(runNextAutoSample, 6000 / simSpeedMultiplier);
+      } else {
+        btn.classList.remove("active");
+        btn.innerHTML = `<span id="autoRunIcon">▶️</span> 자동 실행 (Auto-run)`;
+        if (autoRunTimer) clearInterval(autoRunTimer);
+      }
+    }
+
+    function runNextAutoSample() {
+      if (activeMail || pendingCeoReview) return;
+      const randIdx = Math.floor(Math.random() * EXAMPLE_MESSAGES.length);
+      document.getElementById("exampleSelect").value = randIdx;
+      processIncomingMessage(EXAMPLE_MESSAGES[randIdx]);
+    }
+
+    function submitManualMessage() {
+      const sender = document.getElementById("manualSender").value.trim();
+      const subject = document.getElementById("manualSubject").value.trim();
+      const body = document.getElementById("manualBody").value.trim();
+
+      if (!subject || !body) {
+        alert("제목과 내용을 입력해주세요.");
+        return;
+      }
+
+      closeModal("newMsgModal");
+      processIncomingMessage({
+        sender: sender || "guest@naver.com",
+        subject: subject,
+        body: body
+      });
+    }
+
+    /* ==========================================================================
+       12. UTILITIES & MODAL CONTROLS
+       ========================================================================== */
+    function setSimSpeed(speed, btn) {
+      simSpeedMultiplier = speed;
+      document.querySelectorAll(".speed-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
+
+    function resetOfficeView() {
+      officeTicks = 0;
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      document.querySelectorAll(".tab-content").forEach(c => c.style.display = "none");
+      document.getElementById(`tab-${tabId}`).style.display = "block";
+
+      if (tabId === "tree") renderTreeNodesList();
+      if (tabId === "logs") renderLogsTable();
+    }
+
+    function toggleEngineMode() {
+      setMode(currentMode === "local" ? "demo" : "local");
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      const badge = document.getElementById("aiStatusBadge");
+      const text = document.getElementById("aiStatusText");
+      const demoBanner = document.getElementById("demoBanner");
+
+      if (mode === "demo") {
+        badge.className = "status-badge demo-active";
+        text.innerText = "체험 모드 (로컬 시뮬레이션)";
+        demoBanner.style.display = "flex";
+      } else {
+        badge.className = "status-badge local-active";
+        text.innerText = `로컬 Ollama 실시간 연동 (${document.getElementById("modelSelect").value})`;
+        demoBanner.style.display = "none";
+      }
+    }
+
+    async function testOllamaConnection() {
+      try {
+        const res = await fetch("http://localhost:11434/v1/systemone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: document.getElementById("modelSelect").value || "tev1:0.8b",
+            state: { sender: "test", subject: "test", body: "test" },
+            questions: { "team": { type: "choice", instructions: "test", criteria: { "a": "a", "b": "b" } } }
+          })
+        });
+        if (res.ok) {
+          alert("🟢 축하합니다! 로컬 Ollama 0.35+에 성공적으로 연결되었습니다.");
+          setMode("local");
+        } else {
+          alert(`⚠️ Ollama 응답 오류 (${res.status}). 체험 모드로 유지됩니다.`);
+        }
+      } catch (err) {
+        alert("⚠️ 연결 실패: Ollama가 실행 중이지 않거나 OLLAMA_ORIGINS='*' 설정이 필요합니다. 체험 모드를 가동합니다.");
+        setMode("demo");
+      }
+    }
+
+    function openNewMsgModal() { document.getElementById("newMsgModal").style.display = "flex"; }
+    function openOllamaGuide() { document.getElementById("ollamaGuideModal").style.display = "flex"; }
+    function openRationaleModal() { document.getElementById("rationaleModal").style.display = "flex"; }
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+    function copyText(str) {
+      navigator.clipboard.writeText(str).then(() => {
+        alert("클립보드에 복사되었습니다: " + str);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Initialize UI
+    window.addEventListener("DOMContentLoaded", () => {
+      renderTreeNodesList();
+      renderLogsTable();
+      updateKpis();
+
+      // Check Ollama connectivity in background on startup
+      fetch("http://localhost:11434/v1/systemone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "tev1:0.8b",
+          state: { sender: "ping", subject: "ping", body: "ping" },
+          questions: { "t": { type: "noul", instructions: "ping" } }
+        })
+      }).then(res => {
+        if (res.ok) setMode("local");
+        else setMode("demo");
+      }).catch(() => {
+        setMode("demo");
+      });
+    });
+  </script>
+</body>
+</html>
