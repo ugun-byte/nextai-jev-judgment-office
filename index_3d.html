@@ -1373,6 +1373,9 @@
           <button id="gmailQuickFetchBtn" class="btn" style="background: rgba(239, 68, 68, 0.18); border-color: rgba(239, 68, 68, 0.45); color: #fca5a5; display: inline-flex; align-items: center; gap: 6px;" onclick="fetchGmailUnreadNow()" title="지메일 수신함에서 새 문의 메일을 즉시 가져와 3D 오피스로 투하합니다">
             📬 새 메일 가져오기
           </button>
+          <button class="btn" style="background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.5); color: #c7d2fe; display: inline-flex; align-items: center; gap: 6px; font-weight: 700;" onclick="goToLogsTab()" title="우측 패널의 누적 판정 이력 및 중요도 필터 탭으로 즉시 전환합니다">
+            📋 판정 이력 보관함 (<span id="quickLogCount">0</span>)
+          </button>
         </div>
       </div>
     </div>
@@ -4031,6 +4034,16 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
         const correctCount = stats.accuracyEvaluations.filter(Boolean).length;
         const acc = ((correctCount / totalEvaluated) * 100).toFixed(1);
         document.getElementById("kpiAccuracy").innerText = `${acc}%`;
+      }
+
+      const qCount = document.getElementById("quickLogCount");
+      if (qCount) qCount.innerText = stats.logs.length;
+    }
+
+    function goToLogsTab() {
+      const logsBtn = document.querySelector(".tabs-header button:nth-child(3)");
+      if (logsBtn) {
+        switchTab('logs', logsBtn);
       }
     }
 
