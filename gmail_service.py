@@ -37,6 +37,14 @@ class GmailService:
         text = re.sub(r'\n{3,}', '\n\n', text)
         return text.strip()
 
+    def _format_error(self, e):
+        err_msg = str(e)
+        if "Application-specific password required" in err_msg:
+            return "Google 일반 로그인 비밀번호가 입력되었습니다.\nGoogle 보안 정책상 외부 앱(IMAP) 연동 시에는 일반 비밀번호 대신 16자리 'Google 앱 비밀번호'를 입력해야 합니다.\n\n👉 발급 방법: https://myaccount.google.com/apppasswords 에 접속하여 16자리 앱 비밀번호를 생성해주세요."
+        if "Invalid credentials" in err_msg:
+            return "Gmail 계정 또는 앱 비밀번호가 올바르지 않습니다. 이메일 주소와 16자리 앱 비밀번호를 다시 확인해주세요."
+        return f"Gmail 연결 오류: {err_msg}"
+
     def test_connection(self, user, app_password):
         """Test authentication and inbox access."""
         clean_pass = app_password.replace(" ", "").strip()
@@ -48,10 +56,8 @@ class GmailService:
             if status == "OK":
                 return {"ok": True, "message": f"Gmail 계정 [{user}] 인증 및 접속 성공!"}
             return {"ok": False, "error": f"INBOX 접근 실패 (상태: {status})"}
-        except imaplib.IMAP4.error as e:
-            return {"ok": False, "error": f"Gmail 인증 실패: {str(e)}. (Google 계정의 16자리 '앱 비밀번호'를 입력하셨는지 확인해주세요.)"}
         except Exception as e:
-            return {"ok": False, "error": f"연결 오류: {str(e)}"}
+            return {"ok": False, "error": self._format_error(e)}
 
     def fetch_unread_emails(self, user, app_password, limit=5, mark_read=False):
         """Fetch latest unread emails from INBOX."""
@@ -145,4 +151,4 @@ class GmailService:
                 "total_unread": len(mail_ids)
             }
         except Exception as e:
-            return {"ok": False, "error": str(e), "emails": []}
+            return {"ok": False, "error": self._format_error(e), "emails": []}
