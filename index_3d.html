@@ -1527,7 +1527,7 @@
   </main>
 
   <!-- MODAL: Mail Detail & Draft Answer Modal -->
-  <div id="mailDetailModal" class="modal-backdrop">
+  <div id="mailDetailModal" class="modal-backdrop" onclick="if (event.target === this) closeModal('mailDetailModal');">
     <div class="modal-box" style="max-width: 680px; max-height: 88vh; display: flex; flex-direction: column;">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -4145,51 +4145,82 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
     let currentDetailLogIndex = null;
 
     function openLogDetailModal(index) {
-      currentDetailLogIndex = index;
-      const log = stats.logs[index];
-      if (!log) return;
+      try {
+        currentDetailLogIndex = index;
+        const log = stats.logs[index];
+        if (!log) {
+          console.warn("Log not found at index:", index);
+          return;
+        }
 
-      let pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: 700;">🟢 일반 문의</span>`;
-      if (log.priorityType === "archive") {
-        pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(100, 116, 139, 0.25); color: #94a3b8; font-weight: 700;">⚪️ 단순보관</span>`;
-      } else if (log.priorityType === "high") {
-        pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; font-weight: 700;">🟡 중요(결제/매출)</span>`;
-      } else if (log.priorityType === "critical") {
-        pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(239, 68, 68, 0.25); color: #f87171; font-weight: 700;">🔴 긴급(CEO 결재)</span>`;
+        let pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: 700;">🟢 일반 문의</span>`;
+        if (log.priorityType === "archive") {
+          pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(100, 116, 139, 0.25); color: #94a3b8; font-weight: 700;">⚪️ 단순보관</span>`;
+        } else if (log.priorityType === "high") {
+          pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(245, 158, 11, 0.25); color: #fbbf24; font-weight: 700;">🟡 중요(결제/매출)</span>`;
+        } else if (log.priorityType === "critical") {
+          pBadgeHtml = `<span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(239, 68, 68, 0.25); color: #f87171; font-weight: 700;">🔴 긴급(CEO 결재)</span>`;
+        }
+
+        const mPriority = document.getElementById("mdmPriorityBadge");
+        if (mPriority) mPriority.innerHTML = pBadgeHtml;
+
+        const mSubject = document.getElementById("mdmSubject");
+        if (mSubject) mSubject.innerText = log.subject || "(제목 없음)";
+
+        const mSender = document.getElementById("mdmSender");
+        if (mSender) mSender.innerText = log.sender || "(발신자 없음)";
+
+        const mTime = document.getElementById("mdmTime");
+        if (mTime) mTime.innerText = log.timestamp || "방금 전";
+
+        const mBody = document.getElementById("mdmBody");
+        if (mBody) mBody.innerText = log.body || "(본문 내용 없음)";
+
+        // Trajectory steps
+        const trajContainer = document.getElementById("mdmTrajectory");
+        if (trajContainer) {
+          trajContainer.innerHTML = `<span class="path-node-tag">🚀 투하 접수</span>`;
+          const traj = log.trajectory || [];
+          traj.forEach(t => {
+            if (!t) return;
+            let ans = "";
+            if (t.answer) {
+              ans = t.answer.choice || (t.answer.noul !== undefined ? (t.answer.noul >= 0.7 ? '예(환불)' : '아니오') : `Level ${Math.round(t.answer.score || 0)}`);
+            }
+            const qTitle = t.questionNameKo || t.questionId || '분석 단계';
+            trajContainer.innerHTML += `
+              <span class="path-arrow">➜</span>
+              <span class="path-node-tag" style="border-color: #6366f1;">${escapeHtml(qTitle)} (${escapeHtml(String(ans))})</span>
+            `;
+          });
+        }
+
+        // Target Dept & Auto-draft
+        const actionDef = (currentTree && currentTree.actions && currentTree.actions[log.finalActionId]) || {};
+        const mAvatar = document.getElementById("mdmDeptAvatar");
+        if (mAvatar) mAvatar.innerText = log.avatar || actionDef.avatar || "🤖";
+
+        const mDeptName = document.getElementById("mdmDeptName");
+        if (mDeptName) mDeptName.innerText = log.finalActionName || actionDef.deptName || "미지정 부서";
+
+        const mDraft = document.getElementById("mdmDraftReply");
+        if (mDraft) mDraft.innerText = log.draftReply || actionDef.draftTemplate || "담당 부서에서 확인 후 신속히 처리해 드립니다.";
+
+        // Feedback area
+        const fbArea = document.getElementById("mdmFeedbackArea");
+        if (fbArea) {
+          fbArea.innerHTML = `
+            <span style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; margin-right: 6px;">판단 정확도:</span>
+            <button class="feedback-btn ${log.isCorrect ? 'active-correct' : ''}" style="padding: 4px 10px; font-size: 11px;" onclick="markLogFeedback(${index}, true); openLogDetailModal(${index});">👍 정확함</button>
+            <button class="feedback-btn ${!log.isCorrect ? 'active-wrong' : ''}" style="padding: 4px 10px; font-size: 11px;" onclick="closeModal('mailDetailModal'); openFeedbackCorrectionModal(${index});">👎 다른 부서로 재배정</button>
+          `;
+        }
+
+        openModal("mailDetailModal");
+      } catch (err) {
+        console.error("openLogDetailModal error:", err);
       }
-
-      document.getElementById("mdmPriorityBadge").innerHTML = pBadgeHtml;
-      document.getElementById("mdmSubject").innerText = log.subject;
-      document.getElementById("mdmSender").innerText = log.sender;
-      document.getElementById("mdmTime").innerText = log.timestamp;
-      document.getElementById("mdmBody").innerText = log.body || "(본문 내용 없음)";
-
-      // Trajectory steps
-      const trajContainer = document.getElementById("mdmTrajectory");
-      trajContainer.innerHTML = `<span class="path-node-tag">🚀 투하 접수</span>`;
-      log.trajectory.forEach(t => {
-        let ans = t.answer.choice || (t.answer.noul !== undefined ? (t.answer.noul >= 0.7 ? '예(환불)' : '아니오') : `Level ${Math.round(t.answer.score || 0)}`);
-        trajContainer.innerHTML += `
-          <span class="path-arrow">➜</span>
-          <span class="path-node-tag" style="border-color: #6366f1;">${t.questionNameKo} (${ans})</span>
-        `;
-      });
-
-      // Target Dept & Auto-draft
-      const actionDef = currentTree.actions[log.finalActionId] || {};
-      document.getElementById("mdmDeptAvatar").innerText = log.avatar || actionDef.avatar || "🤖";
-      document.getElementById("mdmDeptName").innerText = log.finalActionName;
-      document.getElementById("mdmDraftReply").innerText = log.draftReply || actionDef.draftTemplate || "담당 부서에서 확인 후 신속히 처리해 드립니다.";
-
-      // Feedback area
-      const fbArea = document.getElementById("mdmFeedbackArea");
-      fbArea.innerHTML = `
-        <span style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; margin-right: 6px;">판단 정확도:</span>
-        <button class="feedback-btn ${log.isCorrect ? 'active-correct' : ''}" style="padding: 4px 10px; font-size: 11px;" onclick="markLogFeedback(${index}, true); openLogDetailModal(${index});">👍 정확함</button>
-        <button class="feedback-btn ${!log.isCorrect ? 'active-wrong' : ''}" style="padding: 4px 10px; font-size: 11px;" onclick="closeModal('mailDetailModal'); openFeedbackCorrectionModal(${index});">👎 다른 부서로 재배정</button>
-      `;
-
-      openModal("mailDetailModal");
     }
 
     function copyDraftReply() {
@@ -5271,7 +5302,8 @@ model.save_pretrained_gguf("my_ceo_ai", tokenizer, quantization_method="q4_k_m")
     function openNewMsgModal() { document.getElementById("newMsgModal").style.display = "flex"; }
     function openOllamaGuide() { document.getElementById("ollamaGuideModal").style.display = "flex"; }
     function openRationaleModal() { document.getElementById("rationaleModal").style.display = "flex"; }
-    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+    function openModal(id) { const el = document.getElementById(id); if (el) el.style.display = "flex"; }
+    function closeModal(id) { const el = document.getElementById(id); if (el) el.style.display = "none"; }
 
     function copyText(str) {
       navigator.clipboard.writeText(str).then(() => alert("클립보드에 복사되었습니다: " + str));
